@@ -1,0 +1,16 @@
+{
+  "name": "cfbpredictor-rankings",
+  "version": "0.1.0",
+  "description": "CFBPredictor.com Power Rankings table component for Next.js",
+  "main": "components/PowerRankings.tsx",
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "next": ">=13"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/react": "^18",
+    "@types/node": "^20"
+  }
+}
