@@ -26,7 +26,7 @@ html { scroll-behavior: smooth; }
 
 /* Light */
 [data-theme="light"] {
-  --bg:         #F0F3F8;
+  --bg:         #EDF0F7;
   --surface:    #FFFFFF;
   --surface2:   #E8ECF4;
   --text:       #0F1623;

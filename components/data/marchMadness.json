@@ -1,0 +1,138 @@
+{
+  "bracket": {
+    "East": {
+      "venue": "Albany, NY · Mar 20–23",
+      "r64": [
+        { "label": "G1 · 1 vs 16", "prob": "94.2%", "winnerTop": true,  "top": { "seed": 1,  "name": "Duke",        "delta": "+24.8", "deltaPos": true,  "score": 82 }, "bot": { "seed": 16, "name": "Norfolk St.",  "delta": "−8.1",  "deltaPos": false, "score": 54 } },
+        { "label": "G2 · 8 vs 9",  "prob": "52.1%", "winnerTop": true,  "top": { "seed": 8,  "name": "Mississippi", "delta": "+4.2",  "deltaPos": true,  "score": 71 }, "bot": { "seed": 9,  "name": "Boise St.",    "delta": "+3.7",  "deltaPos": true,  "score": 65 } },
+        { "label": "G3 · 5 vs 12", "prob": "71.3%", "winnerTop": true,  "top": { "seed": 5,  "name": "St. Mary's",  "delta": "+9.1",  "deltaPos": true,  "score": 74 }, "bot": { "seed": 12, "name": "UAB",          "delta": "+1.2",  "deltaPos": true,  "score": 61 } },
+        { "label": "G4 · 4 vs 13", "prob": "81.7%", "winnerTop": true,  "top": { "seed": 4,  "name": "Purdue",      "delta": "+14.3", "deltaPos": true,  "score": 78 }, "bot": { "seed": 13, "name": "Colgate",      "delta": "−3.8",  "deltaPos": false, "score": 59 } },
+        { "label": "G5 · 6 vs 11", "prob": "61.8%", "winnerTop": true,  "top": { "seed": 6,  "name": "Creighton",   "delta": "+7.3",  "deltaPos": true,  "score": 73 }, "bot": { "seed": 11, "name": "NC State",     "delta": "+5.1",  "deltaPos": true,  "score": 66 } },
+        { "label": "G6 · 3 vs 14", "prob": "88.4%", "winnerTop": true,  "top": { "seed": 3,  "name": "Baylor",      "delta": "+18.6", "deltaPos": true,  "score": 80 }, "bot": { "seed": 14, "name": "UCSB",         "delta": "−6.2",  "deltaPos": false, "score": 52 } },
+        { "label": "G7 · 7 vs 10", "prob": "57.9%", "winnerTop": true,  "top": { "seed": 7,  "name": "Missouri",    "delta": "+6.4",  "deltaPos": true,  "score": 69 }, "bot": { "seed": 10, "name": "Utah St.",     "delta": "+5.8",  "deltaPos": true,  "score": 62 } },
+        { "label": "G8 · 2 vs 15", "prob": "91.2%", "winnerTop": true,  "top": { "seed": 2,  "name": "Marquette",   "delta": "+21.4", "deltaPos": true,  "score": 76 }, "bot": { "seed": 15, "name": "Vermont",      "delta": "−5.3",  "deltaPos": false, "score": 55 } }
+      ],
+      "r32": [
+        { "label": "G1 · 1 vs 8",  "prob": "80.6%", "winnerTop": true,  "top": { "seed": 1, "name": "Duke",      "delta": "+24.8", "deltaPos": true, "score": 75 }, "bot": { "seed": 8,  "name": "Mississippi", "delta": "+4.2",  "deltaPos": true, "score": 63 } },
+        { "label": "G2 · 4 vs 5",  "prob": "56.4%", "winnerTop": true,  "top": { "seed": 4, "name": "Purdue",    "delta": "+14.3", "deltaPos": true, "score": 69 }, "bot": { "seed": 5,  "name": "St. Mary's",  "delta": "+9.1",  "deltaPos": true, "score": 64 } },
+        { "label": "G3 · 3 vs 6",  "prob": "66.2%", "winnerTop": true,  "top": { "seed": 3, "name": "Baylor",    "delta": "+18.6", "deltaPos": true, "score": 74 }, "bot": { "seed": 6,  "name": "Creighton",   "delta": "+7.3",  "deltaPos": true, "score": 67 } },
+        { "label": "G4 · 2 vs 7",  "prob": "72.1%", "winnerTop": true,  "top": { "seed": 2, "name": "Marquette", "delta": "+21.4", "deltaPos": true, "score": 71 }, "bot": { "seed": 7,  "name": "Missouri",    "delta": "+6.4",  "deltaPos": true, "score": 65 } }
+      ],
+      "s16": [
+        { "label": "G1 · 1 vs 4",  "prob": "73.8%", "winnerTop": true,  "top": { "seed": 1, "name": "Duke",      "delta": "+24.8", "deltaPos": true, "score": 80 }, "bot": { "seed": 4,  "name": "Purdue",    "delta": "+14.3", "deltaPos": true, "score": 70 } },
+        { "label": "G2 · 2 vs 3",  "prob": "57.9%", "winnerTop": false, "top": { "seed": 2, "name": "Marquette", "delta": "+21.4", "deltaPos": true, "score": 73 }, "bot": { "seed": 3,  "name": "Baylor",    "delta": "+18.6", "deltaPos": true, "score": 69 } }
+      ],
+      "e8": [
+        { "label": "Elite 8 · 1 vs 2", "prob": "61.2%", "winnerTop": true, "top": { "seed": 1, "name": "Duke",      "delta": "+24.8", "deltaPos": true, "score": 77 }, "bot": { "seed": 2, "name": "Marquette", "delta": "+21.4", "deltaPos": true, "score": 68 } }
+      ]
+    },
+    "West": {
+      "venue": "San Francisco, CA · Mar 20–23",
+      "r64": [
+        { "label": "G1 · 1 vs 16", "prob": "92.1%", "winnerTop": true,  "top": { "seed": 1,  "name": "Kansas",     "delta": "+23.1", "deltaPos": true,  "score": 80 }, "bot": { "seed": 16, "name": "SIUE",          "delta": "−9.2",  "deltaPos": false, "score": 58 } },
+        { "label": "G2 · 8 vs 9",  "prob": "55.3%", "winnerTop": true,  "top": { "seed": 8,  "name": "Memphis",    "delta": "+5.1",  "deltaPos": true,  "score": 68 }, "bot": { "seed": 9,  "name": "Toledo",        "delta": "+4.6",  "deltaPos": true,  "score": 64 } },
+        { "label": "G3 · 5 vs 12", "prob": "68.4%", "winnerTop": true,  "top": { "seed": 5,  "name": "Illinois",   "delta": "+8.2",  "deltaPos": true,  "score": 72 }, "bot": { "seed": 12, "name": "Akron",         "delta": "+2.1",  "deltaPos": true,  "score": 60 } },
+        { "label": "G4 · 4 vs 13", "prob": "79.2%", "winnerTop": true,  "top": { "seed": 4,  "name": "Indiana",    "delta": "+13.1", "deltaPos": true,  "score": 76 }, "bot": { "seed": 13, "name": "Furman",        "delta": "−2.4",  "deltaPos": false, "score": 58 } },
+        { "label": "G5 · 6 vs 11", "prob": "58.6%", "winnerTop": false, "upset": true, "top": { "seed": 6, "name": "Gonzaga", "delta": "+6.8", "deltaPos": true, "score": 71 }, "bot": { "seed": 11, "name": "VCU",    "delta": "+7.2",  "deltaPos": true,  "score": 74 } },
+        { "label": "G6 · 3 vs 14", "prob": "86.1%", "winnerTop": true,  "top": { "seed": 3,  "name": "Arizona",    "delta": "+17.7", "deltaPos": true,  "score": 78 }, "bot": { "seed": 14, "name": "Bradley",       "delta": "−5.8",  "deltaPos": false, "score": 54 } },
+        { "label": "G7 · 7 vs 10", "prob": "54.2%", "winnerTop": true,  "top": { "seed": 7,  "name": "Texas A&M",  "delta": "+5.9",  "deltaPos": true,  "score": 67 }, "bot": { "seed": 10, "name": "W. Virginia",   "delta": "+4.8",  "deltaPos": true,  "score": 63 } },
+        { "label": "G8 · 2 vs 15", "prob": "93.4%", "winnerTop": true,  "top": { "seed": 2,  "name": "UNC",        "delta": "+21.6", "deltaPos": true,  "score": 81 }, "bot": { "seed": 15, "name": "Fairleigh D.",  "delta": "−7.1",  "deltaPos": false, "score": 52 } }
+      ],
+      "r32": [
+        { "label": "G1 · 1 vs 8",  "prob": "77.4%", "winnerTop": true,  "top": { "seed": 1, "name": "Kansas",  "delta": "+23.1", "deltaPos": true, "score": 74 }, "bot": { "seed": 8,  "name": "Memphis",  "delta": "+5.1",  "deltaPos": true, "score": 62 } },
+        { "label": "G2 · 4 vs 5",  "prob": "61.8%", "winnerTop": true,  "top": { "seed": 4, "name": "Indiana", "delta": "+13.1", "deltaPos": true, "score": 71 }, "bot": { "seed": 5,  "name": "Illinois", "delta": "+8.2",  "deltaPos": true, "score": 66 } },
+        { "label": "G3 · 3 vs 11", "prob": "62.4%", "winnerTop": true,  "top": { "seed": 3, "name": "Arizona", "delta": "+17.7", "deltaPos": true, "score": 75 }, "bot": { "seed": 11, "name": "VCU",      "delta": "+7.2",  "deltaPos": true, "score": 68 } },
+        { "label": "G4 · 2 vs 7",  "prob": "69.8%", "winnerTop": true,  "top": { "seed": 2, "name": "UNC",     "delta": "+21.6", "deltaPos": true, "score": 73 }, "bot": { "seed": 7,  "name": "Texas A&M","delta": "+5.9",  "deltaPos": true, "score": 66 } }
+      ],
+      "s16": [
+        { "label": "G1 · 1 vs 4",  "prob": "70.2%", "winnerTop": true,  "top": { "seed": 1, "name": "Kansas", "delta": "+23.1", "deltaPos": true, "score": 78 }, "bot": { "seed": 4, "name": "Indiana", "delta": "+13.1", "deltaPos": true, "score": 69 } },
+        { "label": "G2 · 2 vs 3",  "prob": "54.6%", "winnerTop": true,  "top": { "seed": 2, "name": "UNC",    "delta": "+21.6", "deltaPos": true, "score": 74 }, "bot": { "seed": 3, "name": "Arizona", "delta": "+17.7", "deltaPos": true, "score": 71 } }
+      ],
+      "e8": [
+        { "label": "Elite 8 · 1 vs 2", "prob": "58.4%", "winnerTop": true, "top": { "seed": 1, "name": "Kansas", "delta": "+23.1", "deltaPos": true, "score": 72 }, "bot": { "seed": 2, "name": "UNC", "delta": "+21.6", "deltaPos": true, "score": 68 } }
+      ]
+    },
+    "South": {
+      "venue": "Charlotte, NC · Mar 21–24",
+      "r64": [
+        { "label": "G1 · 1 vs 16", "prob": "91.8%", "winnerTop": true,  "top": { "seed": 1,  "name": "Kentucky",   "delta": "+20.9", "deltaPos": true,  "score": 83 }, "bot": { "seed": 16, "name": "Montana St.",  "delta": "−9.8",  "deltaPos": false, "score": 56 } },
+        { "label": "G2 · 8 vs 9",  "prob": "53.4%", "winnerTop": false, "top": { "seed": 8,  "name": "Oklahoma",   "delta": "+4.8",  "deltaPos": true,  "score": 65 }, "bot": { "seed": 9,  "name": "TCU",         "delta": "+5.3",  "deltaPos": true,  "score": 68 } },
+        { "label": "G3 · 5 vs 12", "prob": "74.1%", "winnerTop": true,  "top": { "seed": 5,  "name": "Ohio St.",   "delta": "+10.2", "deltaPos": true,  "score": 76 }, "bot": { "seed": 12, "name": "Liberty",      "delta": "+0.8",  "deltaPos": true,  "score": 61 } },
+        { "label": "G4 · 4 vs 13", "prob": "83.6%", "winnerTop": true,  "top": { "seed": 4,  "name": "Wisconsin",  "delta": "+15.8", "deltaPos": true,  "score": 79 }, "bot": { "seed": 13, "name": "Youngstown",   "delta": "−4.1",  "deltaPos": false, "score": 57 } },
+        { "label": "G5 · 6 vs 11", "prob": "47.2%", "winnerTop": false, "upset": true, "top": { "seed": 6, "name": "Clemson",  "delta": "+6.1", "deltaPos": true, "score": 64 }, "bot": { "seed": 11, "name": "VCU",    "delta": "+7.4",  "deltaPos": true,  "score": 67 } },
+        { "label": "G6 · 3 vs 14", "prob": "87.3%", "winnerTop": true,  "top": { "seed": 3,  "name": "Florida",    "delta": "+16.3", "deltaPos": true,  "score": 81 }, "bot": { "seed": 14, "name": "Samford",      "delta": "−5.6",  "deltaPos": false, "score": 53 } },
+        { "label": "G7 · 7 vs 10", "prob": "59.2%", "winnerTop": true,  "top": { "seed": 7,  "name": "Dayton",     "delta": "+7.1",  "deltaPos": true,  "score": 70 }, "bot": { "seed": 10, "name": "BYU",          "delta": "+6.2",  "deltaPos": true,  "score": 65 } },
+        { "label": "G8 · 2 vs 15", "prob": "90.4%", "winnerTop": true,  "top": { "seed": 2,  "name": "Houston",    "delta": "+19.4", "deltaPos": true,  "score": 77 }, "bot": { "seed": 15, "name": "Longwood",     "delta": "−6.8",  "deltaPos": false, "score": 55 } }
+      ],
+      "r32": [
+        { "label": "G1 · 1 vs 9",  "prob": "76.2%", "winnerTop": true,  "top": { "seed": 1, "name": "Kentucky",  "delta": "+20.9", "deltaPos": true, "score": 73 }, "bot": { "seed": 9,  "name": "TCU",      "delta": "+5.3",  "deltaPos": true, "score": 62 } },
+        { "label": "G2 · 4 vs 5",  "prob": "58.1%", "winnerTop": true,  "top": { "seed": 4, "name": "Wisconsin", "delta": "+15.8", "deltaPos": true, "score": 70 }, "bot": { "seed": 5,  "name": "Ohio St.", "delta": "+10.2", "deltaPos": true, "score": 65 } },
+        { "label": "G3 · 3 vs 11", "prob": "64.8%", "winnerTop": true,  "top": { "seed": 3, "name": "Florida",   "delta": "+16.3", "deltaPos": true, "score": 76 }, "bot": { "seed": 11, "name": "VCU",     "delta": "+7.4",  "deltaPos": true, "score": 69 } },
+        { "label": "G4 · 2 vs 7",  "prob": "71.4%", "winnerTop": true,  "top": { "seed": 2, "name": "Houston",   "delta": "+19.4", "deltaPos": true, "score": 72 }, "bot": { "seed": 7,  "name": "Dayton",  "delta": "+7.1",  "deltaPos": true, "score": 64 } }
+      ],
+      "s16": [
+        { "label": "G1 · 1 vs 4",  "prob": "68.4%", "winnerTop": true,  "top": { "seed": 1, "name": "Kentucky",  "delta": "+20.9", "deltaPos": true, "score": 76 }, "bot": { "seed": 4, "name": "Wisconsin", "delta": "+15.8", "deltaPos": true, "score": 69 } },
+        { "label": "G2 · 2 vs 3",  "prob": "56.2%", "winnerTop": true,  "top": { "seed": 2, "name": "Houston",   "delta": "+19.4", "deltaPos": true, "score": 73 }, "bot": { "seed": 3, "name": "Florida",   "delta": "+16.3", "deltaPos": true, "score": 68 } }
+      ],
+      "e8": [
+        { "label": "Elite 8 · 1 vs 2", "prob": "56.8%", "winnerTop": true, "top": { "seed": 1, "name": "Kentucky", "delta": "+20.9", "deltaPos": true, "score": 74 }, "bot": { "seed": 2, "name": "Houston", "delta": "+19.4", "deltaPos": true, "score": 70 } }
+      ]
+    },
+    "Midwest": {
+      "venue": "Detroit, MI · Mar 21–24",
+      "r64": [
+        { "label": "G1 · 1 vs 16", "prob": "93.6%", "winnerTop": true,  "top": { "seed": 1,  "name": "Northwestern","delta": "+18.2", "deltaPos": true,  "score": 84 }, "bot": { "seed": 16, "name": "FDU",           "delta": "−10.1", "deltaPos": false, "score": 52 } },
+        { "label": "G2 · 8 vs 9",  "prob": "51.8%", "winnerTop": true,  "top": { "seed": 8,  "name": "Michigan",    "delta": "+4.4",  "deltaPos": true,  "score": 70 }, "bot": { "seed": 9,  "name": "Iowa St.",      "delta": "+4.1",  "deltaPos": true,  "score": 66 } },
+        { "label": "G3 · 5 vs 12", "prob": "69.8%", "winnerTop": true,  "top": { "seed": 5,  "name": "Rutgers",     "delta": "+8.9",  "deltaPos": true,  "score": 73 }, "bot": { "seed": 12, "name": "Vermont",       "delta": "+1.8",  "deltaPos": true,  "score": 62 } },
+        { "label": "G4 · 4 vs 13", "prob": "82.4%", "winnerTop": true,  "top": { "seed": 4,  "name": "Michigan St.","delta": "+14.9", "deltaPos": true,  "score": 77 }, "bot": { "seed": 13, "name": "N. Kentucky",   "delta": "−3.2",  "deltaPos": false, "score": 57 } },
+        { "label": "G5 · 6 vs 11", "prob": "64.2%", "winnerTop": true,  "top": { "seed": 6,  "name": "St. John's",  "delta": "+7.8",  "deltaPos": true,  "score": 72 }, "bot": { "seed": 11, "name": "Drake",         "delta": "+5.6",  "deltaPos": true,  "score": 64 } },
+        { "label": "G6 · 3 vs 14", "prob": "85.8%", "winnerTop": true,  "top": { "seed": 3,  "name": "Marquette",   "delta": "+17.1", "deltaPos": true,  "score": 79 }, "bot": { "seed": 14, "name": "Morehead St.",  "delta": "−5.9",  "deltaPos": false, "score": 51 } },
+        { "label": "G7 · 7 vs 10", "prob": "56.4%", "winnerTop": true,  "top": { "seed": 7,  "name": "Penn St.",    "delta": "+6.6",  "deltaPos": true,  "score": 68 }, "bot": { "seed": 10, "name": "Nevada",        "delta": "+5.4",  "deltaPos": true,  "score": 63 } },
+        { "label": "G8 · 2 vs 15", "prob": "92.1%", "winnerTop": true,  "top": { "seed": 2,  "name": "Arizona St.", "delta": "+20.2", "deltaPos": true,  "score": 80 }, "bot": { "seed": 15, "name": "Colgate",       "delta": "−6.4",  "deltaPos": false, "score": 53 } }
+      ],
+      "r32": [
+        { "label": "G1 · 1 vs 8",  "prob": "78.6%", "winnerTop": true,  "top": { "seed": 1, "name": "Northwestern","delta": "+18.2", "deltaPos": true, "score": 76 }, "bot": { "seed": 8,  "name": "Michigan",    "delta": "+4.4",  "deltaPos": true, "score": 64 } },
+        { "label": "G2 · 4 vs 5",  "prob": "59.4%", "winnerTop": true,  "top": { "seed": 4, "name": "Michigan St.","delta": "+14.9", "deltaPos": true, "score": 72 }, "bot": { "seed": 5,  "name": "Rutgers",     "delta": "+8.9",  "deltaPos": true, "score": 67 } },
+        { "label": "G3 · 3 vs 6",  "prob": "67.1%", "winnerTop": true,  "top": { "seed": 3, "name": "Marquette",   "delta": "+17.1", "deltaPos": true, "score": 75 }, "bot": { "seed": 6,  "name": "St. John's",  "delta": "+7.8",  "deltaPos": true, "score": 68 } },
+        { "label": "G4 · 2 vs 7",  "prob": "70.8%", "winnerTop": true,  "top": { "seed": 2, "name": "Arizona St.", "delta": "+20.2", "deltaPos": true, "score": 74 }, "bot": { "seed": 7,  "name": "Penn St.",    "delta": "+6.6",  "deltaPos": true, "score": 66 } }
+      ],
+      "s16": [
+        { "label": "G1 · 1 vs 4",  "prob": "71.6%", "winnerTop": true,  "top": { "seed": 1, "name": "Northwestern","delta": "+18.2", "deltaPos": true, "score": 79 }, "bot": { "seed": 4, "name": "Michigan St.","delta": "+14.9", "deltaPos": true, "score": 71 } },
+        { "label": "G2 · 2 vs 3",  "prob": "55.8%", "winnerTop": true,  "top": { "seed": 2, "name": "Arizona St.", "delta": "+20.2", "deltaPos": true, "score": 75 }, "bot": { "seed": 3, "name": "Marquette",   "delta": "+17.1", "deltaPos": true, "score": 70 } }
+      ],
+      "e8": [
+        { "label": "Elite 8 · 1 vs 2", "prob": "59.4%", "winnerTop": true, "top": { "seed": 1, "name": "Northwestern", "delta": "+18.2", "deltaPos": true, "score": 76 }, "bot": { "seed": 2, "name": "Arizona St.", "delta": "+20.2", "deltaPos": true, "score": 71 } }
+      ]
+    }
+  },
+  "rankings": [
+    { "rank": 1,  "logo": "DUKE", "name": "Duke",         "conf": "ACC",     "seed": 1, "cmbki": "+24.8", "off": "122.4", "def": "88.2", "sos": "18.4", "logoColor": "rgba(255,80,80,0.1)" },
+    { "rank": 2,  "logo": "KU",   "name": "Kansas",       "conf": "Big 12",  "seed": 1, "cmbki": "+23.1", "off": "120.8", "def": "89.7", "sos": "19.2", "logoColor": "rgba(74,163,255,0.1)" },
+    { "rank": 3,  "logo": "MQ",   "name": "Marquette",    "conf": "Big East","seed": 2, "cmbki": "+21.4", "off": "119.2", "def": "90.4", "sos": "17.8", "logoColor": "rgba(212,175,55,0.1)" },
+    { "rank": 4,  "logo": "UK",   "name": "Kentucky",     "conf": "SEC",     "seed": 1, "cmbki": "+20.9", "off": "118.7", "def": "91.0", "sos": "18.9", "logoColor": "rgba(61,220,132,0.07)" },
+    { "rank": 5,  "logo": "UH",   "name": "Houston",      "conf": "Big 12",  "seed": 2, "cmbki": "+19.4", "off": "116.9", "def": "87.8", "sos": "16.4", "logoColor": "rgba(255,140,66,0.08)" },
+    { "rank": 6,  "logo": "NU",   "name": "Northwestern", "conf": "Big Ten", "seed": 1, "cmbki": "+18.2", "off": "115.4", "def": "89.1", "sos": "17.1", "logoColor": "rgba(160,120,255,0.1)" },
+    { "rank": 7,  "logo": "AZ",   "name": "Arizona",      "conf": "Pac-12",  "seed": 2, "cmbki": "+17.7", "off": "117.1", "def": "92.3", "sos": "15.8", "logoColor": "rgba(74,163,255,0.08)" },
+    { "rank": 8,  "logo": "UF",   "name": "Florida",      "conf": "SEC",     "seed": 3, "cmbki": "+16.3", "off": "114.8", "def": "90.8", "sos": "16.0", "logoColor": "rgba(255,182,30,0.08)" },
+    { "rank": 9,  "logo": "WIS",  "name": "Wisconsin",    "conf": "Big Ten", "seed": 4, "cmbki": "+15.8", "off": "113.9", "def": "91.6", "sos": "15.4", "logoColor": "rgba(220,60,60,0.08)" },
+    { "rank": 10, "logo": "MSU",  "name": "Michigan St.", "conf": "Big Ten", "seed": 4, "cmbki": "+14.9", "off": "113.6", "def": "91.4", "sos": "16.2", "logoColor": "rgba(61,220,132,0.08)" }
+  ],
+  "predictions": [
+    { "round": "R64 · East",    "date": "Mar 20", "upset": false, "top": { "seed": 1,  "name": "Duke",        "pct": "94.2%" }, "bot": { "seed": 16, "name": "Norfolk St.",   "pct": "5.8%"  }, "spread": "−18.4", "margin": "+22.1", "variance": "±6.2", "score": "Duke 82 · Norfolk St. 54" },
+    { "round": "R64 · West",    "date": "Mar 20", "upset": false, "top": { "seed": 1,  "name": "Kansas",      "pct": "79.6%" }, "bot": { "seed": 16, "name": "SIUE",           "pct": "20.4%" }, "spread": "−15.2", "margin": "+18.3", "variance": "±7.1", "score": "Kansas 78 · SIUE 60" },
+    { "round": "R64 · South",   "date": "Mar 21", "upset": true,  "top": { "seed": 11, "name": "VCU",         "pct": "53.1%" }, "bot": { "seed": 6,  "name": "Clemson",        "pct": "46.9%" }, "spread": "+2.1",  "margin": "+2.8",  "variance": "±9.4", "score": "VCU 68 · Clemson 65" },
+    { "round": "R64 · Midwest", "date": "Mar 21", "upset": false, "top": { "seed": 2,  "name": "Houston",     "pct": "76.8%" }, "bot": { "seed": 15, "name": "Longwood",       "pct": "23.2%" }, "spread": "−13.8", "margin": "+16.4", "variance": "±7.8", "score": "Houston 74 · Longwood 58" },
+    { "round": "R64 · East",    "date": "Mar 20", "upset": false, "top": { "seed": 2,  "name": "Marquette",   "pct": "91.2%" }, "bot": { "seed": 15, "name": "Vermont",        "pct": "8.8%"  }, "spread": "−16.8", "margin": "+20.2", "variance": "±6.8", "score": "Marquette 76 · Vermont 55" },
+    { "round": "R64 · West",    "date": "Mar 20", "upset": false, "top": { "seed": 2,  "name": "UNC",         "pct": "93.4%" }, "bot": { "seed": 15, "name": "Fairleigh D.",   "pct": "6.6%"  }, "spread": "−17.4", "margin": "+21.1", "variance": "±6.1", "score": "UNC 81 · Fairleigh D. 52" }
+  ],
+  "odds": [
+    { "rank": 1, "logo": "DUKE", "name": "Duke",         "conf": "ACC · Seed 1",      "logoColor": "rgba(255,80,80,0.1)",   "r32": "96.2%", "s16": "84.1%", "e8": "68.4%", "f4": "52.1%", "final": "38.4%", "champ": "28.6%", "bar": 100 },
+    { "rank": 2, "logo": "KU",   "name": "Kansas",       "conf": "Big 12 · Seed 1",   "logoColor": "rgba(74,163,255,0.1)",  "r32": "94.8%", "s16": "80.2%", "e8": "62.1%", "f4": "44.8%", "final": "30.2%", "champ": "21.2%", "bar": 74 },
+    { "rank": 3, "logo": "MQ",   "name": "Marquette",    "conf": "Big East · Seed 2", "logoColor": "rgba(212,175,55,0.1)",  "r32": "91.4%", "s16": "74.6%", "e8": "54.8%", "f4": "38.2%", "final": "24.1%", "champ": "15.8%", "bar": 55 },
+    { "rank": 4, "logo": "UK",   "name": "Kentucky",     "conf": "SEC · Seed 1",      "logoColor": "rgba(61,220,132,0.07)", "r32": "93.1%", "s16": "76.8%", "e8": "58.2%", "f4": "40.6%", "final": "26.8%", "champ": "17.2%", "bar": 60 },
+    { "rank": 5, "logo": "UH",   "name": "Houston",      "conf": "Big 12 · Seed 2",   "logoColor": "rgba(255,140,66,0.08)", "r32": "88.6%", "s16": "68.4%", "e8": "48.2%", "f4": "32.4%", "final": "18.6%", "champ": "11.4%", "bar": 40 },
+    { "rank": 6, "logo": "NU",   "name": "Northwestern", "conf": "Big Ten · Seed 1",  "logoColor": "rgba(160,120,255,0.1)", "r32": "90.2%", "s16": "72.1%", "e8": "54.6%", "f4": "38.8%", "final": "22.4%", "champ": "13.6%", "bar": 48 },
+    { "rank": 7, "logo": "MQ",   "name": "Marquette",    "conf": "Big East · Seed 2", "logoColor": "rgba(212,175,55,0.08)", "r32": "92.4%", "s16": "77.8%", "e8": "60.4%", "f4": "42.6%", "final": "28.8%", "champ": "19.4%", "bar": 68 },
+    { "rank": 8, "logo": "AZ",   "name": "Arizona",      "conf": "Pac-12 · Seed 2",   "logoColor": "rgba(74,163,255,0.08)", "r32": "87.4%", "s16": "66.2%", "e8": "46.8%", "f4": "30.1%", "final": "17.2%", "champ": "10.1%", "bar": 35 }
+  ]
+}
