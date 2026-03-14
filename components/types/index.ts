@@ -10,6 +10,10 @@ export interface Team {
   daspi: number;
   tpi: number;
   cfbc: number;
+  // Optional enriched fields from TeamMeta
+  logos?: string[];
+  primaryColor?: string;
+  alternateColor?: string;
   // Computed at runtime by computeDerivedStats()
   sor?: number;
   epi?: number;

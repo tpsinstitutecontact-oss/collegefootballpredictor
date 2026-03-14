@@ -1,8 +1,23 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import NavBar from '@/components/cfbpredictor-rankings/NavBar';
 import { useTheme } from '@/components/cfbpredictor-rankings/ThemeProvider';
+import { cbbTeams, CbbTeam, CBB_CONFS } from '@/data/cbbTeams';
+
+import { TeamMeta, getTeamByNameOrSlug } from '@/data/teams';
+
+// Enrich CBB teams with logo/color from teams.ts
+const enrichedCbbTeams = cbbTeams.map(t => {
+  // Use robust lookup for matching by name only
+  const meta = getTeamByNameOrSlug(t.name);
+  return {
+    ...t,
+    logo: meta?.logos?.[0] ?? '',
+    primaryColor: meta?.primaryColor ?? '',
+    alternateColor: meta?.alternateColor ?? '',
+  };
+});
 
 /* ══════════════════════════════════════════════
    TYPES
@@ -12,8 +27,34 @@ type Region = typeof REGIONS[number];
 interface Team { seed: number; name: string; abbr: string; delta: string; deltaPos: boolean; score: number; }
 interface Game  { label: string; prob: string; top: Team; bot: Team; winnerTop: boolean; upset?: boolean; }
 
+type GameStatus = 'completed' | 'predicted';
+interface LiveGame extends Game {
+  status: GameStatus;
+  modelCorrect?: boolean;
+  modelProb: number;
+}
+
+/* ── Confidence tier helpers ── */
+function getTier(prob: number): 'high' | 'moderate' | 'tossup' {
+  if (prob >= 0.80) return 'high';
+  if (prob >= 0.60) return 'moderate';
+  return 'tossup';
+}
+
+function tierHeaderBg(tier: 'high' | 'moderate' | 'tossup', isDark: boolean): string {
+  if (tier === 'high')     return isDark ? 'rgba(61,220,132,0.07)'  : 'rgba(26,143,86,0.06)';
+  if (tier === 'moderate') return isDark ? 'rgba(74,163,255,0.07)'  : 'rgba(42,111,219,0.06)';
+  return                          isDark ? 'rgba(255,182,30,0.07)'  : 'rgba(181,130,20,0.06)';
+}
+
+function tierColor(tier: 'high' | 'moderate' | 'tossup', T: any): string {
+  if (tier === 'high')     return T.green;
+  if (tier === 'moderate') return T.blue;
+  return T.gold;
+}
+
 /* ══════════════════════════════════════════════
-   BRACKET DATA
+   CHALK BRACKET DATA (locked pre-tournament)
 ══════════════════════════════════════════════ */
 const data = {
   East: {
@@ -43,14 +84,14 @@ const data = {
   West: {
     venue: 'San Francisco, CA · Mar 20–23',
     r64: [
-      { label:'G1 · 1v16', prob:'92.1%', winnerTop:true,  top:{seed:1,  name:'Kansas',   abbr:'Kansas',  delta:'+23.1',deltaPos:true,  score:80}, bot:{seed:16,name:'SIUE',        abbr:'SIUE',   delta:'−9.2', deltaPos:false,score:58} },
-      { label:'G2 · 8v9',  prob:'55.3%', winnerTop:true,  top:{seed:8,  name:'Memphis',  abbr:'Memphis', delta:'+5.1', deltaPos:true,  score:68}, bot:{seed:9, name:'Toledo',      abbr:'Toledo', delta:'+4.6', deltaPos:true, score:64} },
-      { label:'G3 · 5v12', prob:'68.4%', winnerTop:true,  top:{seed:5,  name:'Illinois', abbr:'Illini',  delta:'+8.2', deltaPos:true,  score:72}, bot:{seed:12,name:'Akron',       abbr:'Akron',  delta:'+2.1', deltaPos:true, score:60} },
-      { label:'G4 · 4v13', prob:'79.2%', winnerTop:true,  top:{seed:4,  name:'Indiana',  abbr:'Indiana', delta:'+13.1',deltaPos:true,  score:76}, bot:{seed:13,name:'Furman',      abbr:'Furman', delta:'−2.4', deltaPos:false,score:58} },
+      { label:'G1 · 1v16', prob:'92.1%', winnerTop:true,  top:{seed:1,name:'Kansas',   abbr:'Kansas',  delta:'+23.1',deltaPos:true,  score:80}, bot:{seed:16,name:'SIUE',        abbr:'SIUE',   delta:'−9.2', deltaPos:false,score:58} },
+      { label:'G2 · 8v9',  prob:'55.3%', winnerTop:true,  top:{seed:8,name:'Memphis',  abbr:'Memphis', delta:'+5.1', deltaPos:true,  score:68}, bot:{seed:9, name:'Toledo',      abbr:'Toledo', delta:'+4.6', deltaPos:true, score:64} },
+      { label:'G3 · 5v12', prob:'68.4%', winnerTop:true,  top:{seed:5,name:'Illinois', abbr:'Illini',  delta:'+8.2', deltaPos:true,  score:72}, bot:{seed:12,name:'Akron',       abbr:'Akron',  delta:'+2.1', deltaPos:true, score:60} },
+      { label:'G4 · 4v13', prob:'79.2%', winnerTop:true,  top:{seed:4,name:'Indiana',  abbr:'Indiana', delta:'+13.1',deltaPos:true,  score:76}, bot:{seed:13,name:'Furman',      abbr:'Furman', delta:'−2.4', deltaPos:false,score:58} },
       { label:'G5 · 6v11', prob:'58.6%', winnerTop:false, upset:true, top:{seed:6,name:'Gonzaga',abbr:'Gonzaga',delta:'+6.8',deltaPos:true,score:71}, bot:{seed:11,name:'VCU',abbr:'VCU',delta:'+7.2',deltaPos:true,score:74} },
-      { label:'G6 · 3v14', prob:'86.1%', winnerTop:true,  top:{seed:3,  name:'Arizona',  abbr:'Arizona', delta:'+17.7',deltaPos:true,  score:78}, bot:{seed:14,name:'Bradley',     abbr:'Bradley',delta:'−5.8', deltaPos:false,score:54} },
-      { label:'G7 · 7v10', prob:'54.2%', winnerTop:true,  top:{seed:7,  name:'Texas A&M',abbr:'TX A&M',  delta:'+5.9', deltaPos:true,  score:67}, bot:{seed:10,name:'W. Virginia', abbr:'WVU',    delta:'+4.8', deltaPos:true, score:63} },
-      { label:'G8 · 2v15', prob:'93.4%', winnerTop:true,  top:{seed:2,  name:'UNC',      abbr:'UNC',     delta:'+21.6',deltaPos:true,  score:81}, bot:{seed:15,name:'Fairleigh D.',abbr:'FDU',    delta:'−7.1', deltaPos:false,score:52} },
+      { label:'G6 · 3v14', prob:'86.1%', winnerTop:true,  top:{seed:3,name:'Arizona',  abbr:'Arizona', delta:'+17.7',deltaPos:true,  score:78}, bot:{seed:14,name:'Bradley',     abbr:'Bradley',delta:'−5.8', deltaPos:false,score:54} },
+      { label:'G7 · 7v10', prob:'54.2%', winnerTop:true,  top:{seed:7,name:'Texas A&M',abbr:'TX A&M',  delta:'+5.9', deltaPos:true,  score:67}, bot:{seed:10,name:'W. Virginia', abbr:'WVU',    delta:'+4.8', deltaPos:true, score:63} },
+      { label:'G8 · 2v15', prob:'93.4%', winnerTop:true,  top:{seed:2,name:'UNC',      abbr:'UNC',     delta:'+21.6',deltaPos:true,  score:81}, bot:{seed:15,name:'Fairleigh D.',abbr:'FDU',    delta:'−7.1', deltaPos:false,score:52} },
     ],
     r32: [
       { label:'G1 · 1v8',  prob:'77.4%', winnerTop:true, top:{seed:1,name:'Kansas', abbr:'Kansas', delta:'+23.1',deltaPos:true,score:74}, bot:{seed:8, name:'Memphis', abbr:'Memphis',delta:'+5.1', deltaPos:true,score:62} },
@@ -67,14 +108,14 @@ const data = {
   South: {
     venue: 'Charlotte, NC · Mar 21–24',
     r64: [
-      { label:'G1 · 1v16', prob:'91.8%', winnerTop:true,  top:{seed:1,  name:'Kentucky',  abbr:'UK',   delta:'+20.9', deltaPos:true,  score:83}, bot:{seed:16, name:'Montana St.', abbr:'MT St', delta:'−9.8',  deltaPos:false, score:56} },
-      { label:'G2 · 8v9',  prob:'53.4%', winnerTop:false, top:{seed:8,  name:'Oklahoma',  abbr:'OU',   delta:'+4.8',  deltaPos:true,  score:65}, bot:{seed:9,  name:'TCU',         abbr:'TCU',  delta:'+5.3',  deltaPos:true,  score:68} },
-      { label:'G3 · 5v12', prob:'74.1%', winnerTop:true,  top:{seed:5,  name:'Ohio St.',  abbr:'OSU',  delta:'+10.2', deltaPos:true,  score:76}, bot:{seed:12, name:'Liberty',      abbr:'Lib',  delta:'+0.8',  deltaPos:true,  score:61} },
-      { label:'G4 · 4v13', prob:'83.6%', winnerTop:true,  top:{seed:4,  name:'Wisconsin', abbr:'Wis',  delta:'+15.8', deltaPos:true,  score:79}, bot:{seed:13, name:'Youngstown',   abbr:'YSU',  delta:'−4.1',  deltaPos:false, score:57} },
-      { label:'G5 · 6v11', prob:'47.2%', upset:true, winnerTop:false, top:{seed:6, name:'Clemson', abbr:'Clem', delta:'+6.1', deltaPos:true, score:64}, bot:{seed:11, name:'VCU', abbr:'VCU', delta:'+7.4', deltaPos:true, score:67} },
-      { label:'G6 · 3v14', prob:'87.3%', winnerTop:true,  top:{seed:3,  name:'Florida',   abbr:'UF',   delta:'+16.3', deltaPos:true,  score:81}, bot:{seed:14, name:'Samford',      abbr:'Sam',  delta:'−5.6',  deltaPos:false, score:53} },
-      { label:'G7 · 7v10', prob:'59.2%', winnerTop:true,  top:{seed:7,  name:'Dayton',    abbr:'Day',  delta:'+7.1',  deltaPos:true,  score:70}, bot:{seed:10, name:'BYU',          abbr:'BYU',  delta:'+6.2',  deltaPos:true,  score:65} },
-      { label:'G8 · 2v15', prob:'90.4%', winnerTop:true,  top:{seed:2,  name:'Houston',   abbr:'Hou',  delta:'+19.4', deltaPos:true,  score:77}, bot:{seed:15, name:'Longwood',     abbr:'Long', delta:'−6.8',  deltaPos:false, score:55} },
+      { label:'G1 · 1v16', prob:'91.8%', winnerTop:true,  top:{seed:1,name:'Kentucky',  abbr:'UK',   delta:'+20.9', deltaPos:true,  score:83}, bot:{seed:16,name:'Montana St.', abbr:'MT St', delta:'−9.8',  deltaPos:false, score:56} },
+      { label:'G2 · 8v9',  prob:'53.4%', winnerTop:false, top:{seed:8,name:'Oklahoma',  abbr:'OU',   delta:'+4.8',  deltaPos:true,  score:65}, bot:{seed:9, name:'TCU',         abbr:'TCU',  delta:'+5.3',  deltaPos:true,  score:68} },
+      { label:'G3 · 5v12', prob:'74.1%', winnerTop:true,  top:{seed:5,name:'Ohio St.',  abbr:'OSU',  delta:'+10.2', deltaPos:true,  score:76}, bot:{seed:12,name:'Liberty',      abbr:'Lib',  delta:'+0.8',  deltaPos:true,  score:61} },
+      { label:'G4 · 4v13', prob:'83.6%', winnerTop:true,  top:{seed:4,name:'Wisconsin', abbr:'Wis',  delta:'+15.8', deltaPos:true,  score:79}, bot:{seed:13,name:'Youngstown',   abbr:'YSU',  delta:'−4.1',  deltaPos:false, score:57} },
+      { label:'G5 · 6v11', prob:'47.2%', upset:true, winnerTop:false, top:{seed:6,name:'Clemson', abbr:'Clem', delta:'+6.1', deltaPos:true, score:64}, bot:{seed:11,name:'VCU', abbr:'VCU', delta:'+7.4', deltaPos:true, score:67} },
+      { label:'G6 · 3v14', prob:'87.3%', winnerTop:true,  top:{seed:3,name:'Florida',   abbr:'UF',   delta:'+16.3', deltaPos:true,  score:81}, bot:{seed:14,name:'Samford',      abbr:'Sam',  delta:'−5.6',  deltaPos:false, score:53} },
+      { label:'G7 · 7v10', prob:'59.2%', winnerTop:true,  top:{seed:7,name:'Dayton',    abbr:'Day',  delta:'+7.1',  deltaPos:true,  score:70}, bot:{seed:10,name:'BYU',          abbr:'BYU',  delta:'+6.2',  deltaPos:true,  score:65} },
+      { label:'G8 · 2v15', prob:'90.4%', winnerTop:true,  top:{seed:2,name:'Houston',   abbr:'Hou',  delta:'+19.4', deltaPos:true,  score:77}, bot:{seed:15,name:'Longwood',     abbr:'Long', delta:'−6.8',  deltaPos:false, score:55} },
     ],
     r32: [
       { label:'G1 · 1v9',  prob:'76.2%', winnerTop:true, top:{seed:1,name:'Kentucky',abbr:'UK',  delta:'+20.9',deltaPos:true,score:73}, bot:{seed:9, name:'TCU',     abbr:'TCU', delta:'+5.3', deltaPos:true,score:62} },
@@ -91,14 +132,14 @@ const data = {
   Midwest: {
     venue: 'Detroit, MI · Mar 21–24',
     r64: [
-      { label:'G1 · 1v16', prob:'93.6%', winnerTop:true,  top:{seed:1,  name:'Northwestern', abbr:'NW',   delta:'+18.2', deltaPos:true,  score:84}, bot:{seed:16, name:'FDU',          abbr:'FDU',  delta:'−10.1', deltaPos:false, score:52} },
-      { label:'G2 · 8v9',  prob:'51.8%', winnerTop:true,  top:{seed:8,  name:'Michigan',     abbr:'Mich', delta:'+4.4',  deltaPos:true,  score:70}, bot:{seed:9,  name:'Iowa St.',     abbr:'ISU',  delta:'+4.1',  deltaPos:true,  score:66} },
-      { label:'G3 · 5v12', prob:'69.8%', winnerTop:true,  top:{seed:5,  name:'Rutgers',      abbr:'RU',   delta:'+8.9',  deltaPos:true,  score:73}, bot:{seed:12, name:'Vermont',      abbr:'UVM',  delta:'+1.8',  deltaPos:true,  score:62} },
-      { label:'G4 · 4v13', prob:'82.4%', winnerTop:true,  top:{seed:4,  name:'Michigan St.', abbr:'MSU',  delta:'+14.9', deltaPos:true,  score:77}, bot:{seed:13, name:'N. Kentucky',  abbr:'NKU',  delta:'−3.2',  deltaPos:false, score:57} },
-      { label:'G5 · 6v11', prob:'64.2%', winnerTop:true,  top:{seed:6,  name:"St. John's",   abbr:'SJU',  delta:'+7.8',  deltaPos:true,  score:72}, bot:{seed:11, name:'Drake',        abbr:'Drake',delta:'+5.6',  deltaPos:true,  score:64} },
-      { label:'G6 · 3v14', prob:'85.8%', winnerTop:true,  top:{seed:3,  name:'Marquette',    abbr:'MU',   delta:'+17.1', deltaPos:true,  score:79}, bot:{seed:14, name:'Morehead St.', abbr:'More', delta:'−5.9',  deltaPos:false, score:51} },
-      { label:'G7 · 7v10', prob:'56.4%', winnerTop:true,  top:{seed:7,  name:'Penn St.',     abbr:'PSU',  delta:'+6.6',  deltaPos:true,  score:68}, bot:{seed:10, name:'Nevada',       abbr:'Nev',  delta:'+5.4',  deltaPos:true,  score:63} },
-      { label:'G8 · 2v15', prob:'92.1%', winnerTop:true,  top:{seed:2,  name:'Arizona St.',  abbr:'ASU',  delta:'+20.2', deltaPos:true,  score:80}, bot:{seed:15, name:'Colgate',      abbr:'Colg', delta:'−6.4',  deltaPos:false, score:53} },
+      { label:'G1 · 1v16', prob:'93.6%', winnerTop:true,  top:{seed:1,name:'Northwestern', abbr:'NW',   delta:'+18.2', deltaPos:true,  score:84}, bot:{seed:16,name:'FDU',          abbr:'FDU',  delta:'−10.1', deltaPos:false, score:52} },
+      { label:'G2 · 8v9',  prob:'51.8%', winnerTop:true,  top:{seed:8,name:'Michigan',     abbr:'Mich', delta:'+4.4',  deltaPos:true,  score:70}, bot:{seed:9, name:'Iowa St.',     abbr:'ISU',  delta:'+4.1',  deltaPos:true,  score:66} },
+      { label:'G3 · 5v12', prob:'69.8%', winnerTop:true,  top:{seed:5,name:'Rutgers',      abbr:'RU',   delta:'+8.9',  deltaPos:true,  score:73}, bot:{seed:12,name:'Vermont',      abbr:'UVM',  delta:'+1.8',  deltaPos:true,  score:62} },
+      { label:'G4 · 4v13', prob:'82.4%', winnerTop:true,  top:{seed:4,name:'Michigan St.', abbr:'MSU',  delta:'+14.9', deltaPos:true,  score:77}, bot:{seed:13,name:'N. Kentucky',  abbr:'NKU',  delta:'−3.2',  deltaPos:false, score:57} },
+      { label:'G5 · 6v11', prob:'64.2%', winnerTop:true,  top:{seed:6,name:"St. John's",   abbr:'SJU',  delta:'+7.8',  deltaPos:true,  score:72}, bot:{seed:11,name:'Drake',        abbr:'Drake',delta:'+5.6',  deltaPos:true,  score:64} },
+      { label:'G6 · 3v14', prob:'85.8%', winnerTop:true,  top:{seed:3,name:'Marquette',    abbr:'MU',   delta:'+17.1', deltaPos:true,  score:79}, bot:{seed:14,name:'Morehead St.', abbr:'More', delta:'−5.9',  deltaPos:false, score:51} },
+      { label:'G7 · 7v10', prob:'56.4%', winnerTop:true,  top:{seed:7,name:'Penn St.',     abbr:'PSU',  delta:'+6.6',  deltaPos:true,  score:68}, bot:{seed:10,name:'Nevada',       abbr:'Nev',  delta:'+5.4',  deltaPos:true,  score:63} },
+      { label:'G8 · 2v15', prob:'92.1%', winnerTop:true,  top:{seed:2,name:'Arizona St.',  abbr:'ASU',  delta:'+20.2', deltaPos:true,  score:80}, bot:{seed:15,name:'Colgate',      abbr:'Colg', delta:'−6.4',  deltaPos:false, score:53} },
     ],
     r32: [
       { label:'G1 · 1v8', prob:'78.6%', winnerTop:true, top:{seed:1,name:'Northwestern',abbr:'NW',  delta:'+18.2',deltaPos:true,score:76}, bot:{seed:8, name:'Michigan',   abbr:'Mich',delta:'+4.4', deltaPos:true,score:64} },
@@ -123,18 +164,109 @@ const FF_DATA = {
   champion: { name:'Duke', abbr:'Duke', seed:1, delta:'+24.8', cmbki:'94.2', score:76, conf:'ACC' },
 };
 
-const RANKINGS = [
-  { rank:1,  logo:'DUKE', name:'Duke',         conf:'ACC',     seed:1, cmbki:'+24.8', off:'122.4', def:'88.2', sos:'18.4', logoColor:'rgba(220,50,50,0.1)' },
-  { rank:2,  logo:'KU',   name:'Kansas',       conf:'Big 12',  seed:1, cmbki:'+23.1', off:'120.8', def:'89.7', sos:'19.2', logoColor:'rgba(74,163,255,0.1)' },
-  { rank:3,  logo:'UNC',  name:'N. Carolina',  conf:'ACC',     seed:2, cmbki:'+21.6', off:'119.2', def:'90.4', sos:'17.8', logoColor:'rgba(212,175,55,0.1)' },
-  { rank:4,  logo:'UK',   name:'Kentucky',     conf:'SEC',     seed:1, cmbki:'+20.9', off:'118.7', def:'91.0', sos:'18.9', logoColor:'rgba(61,220,132,0.1)' },
-  { rank:5,  logo:'UH',   name:'Houston',      conf:'Big 12',  seed:2, cmbki:'+19.4', off:'116.9', def:'87.8', sos:'16.4', logoColor:'rgba(255,140,66,0.1)' },
-  { rank:6,  logo:'NW',   name:'Northwestern', conf:'Big Ten', seed:1, cmbki:'+18.2', off:'115.4', def:'89.1', sos:'17.1', logoColor:'rgba(160,120,255,0.1)' },
-  { rank:7,  logo:'ARIZ', name:'Arizona',      conf:'Pac-12',  seed:2, cmbki:'+17.7', off:'117.1', def:'92.3', sos:'15.8', logoColor:'rgba(74,163,255,0.1)' },
-  { rank:8,  logo:'FLA',  name:'Florida',      conf:'SEC',     seed:3, cmbki:'+16.3', off:'114.8', def:'90.8', sos:'16.0', logoColor:'rgba(255,182,30,0.1)' },
-  { rank:9,  logo:'MU',   name:'Marquette',    conf:'Big East',seed:2, cmbki:'+21.4', off:'118.2', def:'88.6', sos:'16.9', logoColor:'rgba(212,175,55,0.1)' },
-  { rank:10, logo:'MSU',  name:'Michigan St.', conf:'Big Ten', seed:4, cmbki:'+14.9', off:'113.6', def:'91.4', sos:'16.2', logoColor:'rgba(61,220,132,0.1)' },
-];
+const CURRENT_ROUND = 'Round of 32';
+
+function toLive(g: Game, status: GameStatus, modelCorrect?: boolean): LiveGame {
+  return { ...g, status, modelCorrect, modelProb: parseFloat(g.prob) / 100 };
+}
+
+const liveData: Record<Region, { venue: string; r64: LiveGame[]; r32: LiveGame[]; s16: LiveGame[]; e8: LiveGame[] }> = {
+  East: {
+    venue: data.East.venue,
+    r64: [
+      toLive(data.East.r64[0], 'completed', true),
+      toLive(data.East.r64[1], 'completed', true),
+      toLive(data.East.r64[2], 'completed', true),
+      toLive(data.East.r64[3], 'completed', true),
+      toLive(data.East.r64[4], 'completed', true),
+      toLive(data.East.r64[5], 'completed', true),
+      toLive(data.East.r64[6], 'completed', false),
+      toLive(data.East.r64[7], 'completed', true),
+    ],
+    r32: data.East.r32.map(g => toLive(g, 'predicted')),
+    s16: data.East.s16.map(g => toLive(g, 'predicted')),
+    e8:  data.East.e8.map(g => toLive(g, 'predicted')),
+  },
+  West: {
+    venue: data.West.venue,
+    r64: data.West.r64.map(g => toLive(g, 'completed', true)),
+    r32: data.West.r32.map(g => toLive(g, 'predicted')),
+    s16: data.West.s16.map(g => toLive(g, 'predicted')),
+    e8:  data.West.e8.map(g => toLive(g, 'predicted')),
+  },
+  South: {
+    venue: data.South.venue,
+    r64: [
+      toLive(data.South.r64[0], 'completed', true),
+      toLive(data.South.r64[1], 'completed', true),
+      toLive(data.South.r64[2], 'completed', true),
+      toLive(data.South.r64[3], 'completed', true),
+      toLive(data.South.r64[4], 'completed', true),
+      toLive(data.South.r64[5], 'completed', true),
+      toLive(data.South.r64[6], 'completed', false),
+      toLive(data.South.r64[7], 'completed', true),
+    ],
+    r32: data.South.r32.map(g => toLive(g, 'predicted')),
+    s16: data.South.s16.map(g => toLive(g, 'predicted')),
+    e8:  data.South.e8.map(g => toLive(g, 'predicted')),
+  },
+  Midwest: {
+    venue: data.Midwest.venue,
+    r64: [
+      toLive(data.Midwest.r64[0], 'completed', true),
+      toLive(data.Midwest.r64[1], 'completed', true),
+      toLive(data.Midwest.r64[2], 'completed', true),
+      toLive(data.Midwest.r64[3], 'completed', true),
+      toLive(data.Midwest.r64[4], 'completed', true),
+      toLive(data.Midwest.r64[5], 'completed', true),
+      toLive(data.Midwest.r64[6], 'completed', false),
+      toLive(data.Midwest.r64[7], 'completed', true),
+    ],
+    r32: data.Midwest.r32.map(g => toLive(g, 'predicted')),
+    s16: data.Midwest.s16.map(g => toLive(g, 'predicted')),
+    e8:  data.Midwest.e8.map(g => toLive(g, 'predicted')),
+  },
+};
+
+function getChalkResult(region: Region, round: string, idx: number): { completed: boolean; correct?: boolean; prob: number } | null {
+  const live = liveData[region];
+  const rounds: Record<string, LiveGame[]> = { r64: live.r64, r32: live.r32, s16: live.s16, e8: live.e8 };
+  const g = rounds[round]?.[idx];
+  if (!g || g.status !== 'completed') return null;
+  return { completed: true, correct: g.modelCorrect, prob: g.modelProb };
+}
+
+function computeAccumulator() {
+  const allCompleted: LiveGame[] = [];
+  for (const region of REGIONS) {
+    const rd = liveData[region];
+    for (const round of [rd.r64, rd.r32, rd.s16, rd.e8]) {
+      for (const g of round) {
+        if (g.status === 'completed') allCompleted.push(g);
+      }
+    }
+  }
+  const total = allCompleted.length;
+  const correct = allCompleted.filter(g => g.modelCorrect).length;
+  const expectedAcc = total > 0 ? allCompleted.reduce((sum, g) => sum + g.modelProb, 0) / total * 100 : 0;
+  const actualAcc = total > 0 ? (correct / total) * 100 : 0;
+  const delta = actualAcc - expectedAcc;
+  const tiers = [
+    { label: 'High Confidence', range: '80%+', min: 0.80, max: 1.0 },
+    { label: 'Moderate', range: '60–79%', min: 0.60, max: 0.799 },
+    { label: 'Toss-Up', range: '50–59%', min: 0.0, max: 0.599 },
+  ];
+  const tierStats = tiers.map(tier => {
+    const games = allCompleted.filter(g => g.modelProb >= tier.min && g.modelProb <= tier.max);
+    const tierCorrect = games.filter(g => g.modelCorrect).length;
+    const tierExpected = games.length > 0 ? games.reduce((s, g) => s + g.modelProb, 0) / games.length * 100 : 0;
+    const tierActual = games.length > 0 ? (tierCorrect / games.length) * 100 : 0;
+    return { ...tier, total: games.length, correct: tierCorrect, expected: tierExpected, actual: tierActual };
+  });
+  const missesInTossup = allCompleted.filter(g => !g.modelCorrect && g.modelProb < 0.60).length;
+  const totalMisses = total - correct;
+  return { total, correct, expectedAcc, actualAcc, delta, tierStats, totalMisses, missesInTossup };
+}
 
 const GAME_PREDICTIONS = [
   { round:'R64 · East',    date:'Mar 20', upset:false, top:{seed:1,  name:'Duke',     pct:'94.2%'}, bot:{seed:16,name:'Norfolk St.',pct:'5.8%'},  spread:'−18.4', margin:'+22.1', variance:'±6.2', score:'Duke 82 · Norfolk St. 54' },
@@ -156,17 +288,56 @@ const ODDS = [
   { rank:8,logo:'ARIZ',name:'Arizona',     conf:'Pac-12 · Seed 2',  logoColor:'rgba(74,163,255,0.1)',  r32:'87.4%',s16:'66.2%',e8:'46.8%',f4:'30.1%',final:'17.2%',champ:'10.1%',bar:35  },
 ];
 
-/* ══════════════════════════════════════════════
-   COMPONENTS
-══════════════════════════════════════════════ */
+type CardMode = 'default' | 'live' | 'chalk-overlay';
 
-function GameCard({ game, elite=false, fullName=false, T }: { game: Game; elite?: boolean; fullName?: boolean; T: any }) {
+function GameCard({ game, elite=false, fullName=false, T, mode='default', chalkResult }: {
+  game: Game | LiveGame; elite?: boolean; fullName?: boolean; T: any;
+  mode?: CardMode;
+  chalkResult?: { completed: boolean; correct?: boolean; prob: number } | null;
+}) {
   const teams = [{t:game.top,win:game.winnerTop},{t:game.bot,win:!game.winnerTop}];
+  const lg = mode === 'live' ? (game as LiveGame) : null;
+  const isLiveCompleted = lg?.status === 'completed';
+  const isLiveCorrect = lg?.modelCorrect;
+  const isChalkCompleted = mode === 'chalk-overlay' && chalkResult?.completed;
+  const isChalkCorrect = chalkResult?.correct;
+  const showResult = isLiveCompleted || isChalkCompleted;
+  const isCorrect = isLiveCompleted ? isLiveCorrect : isChalkCorrect;
+  const prob = lg?.modelProb ?? parseFloat(game.prob) / 100;
+  const tier = getTier(prob);
+  let headerBg: string;
+  if (showResult) {
+    headerBg = isCorrect
+      ? (T.isDark ? 'rgba(61,220,132,0.06)' : 'rgba(26,143,86,0.05)')
+      : (T.isDark ? 'rgba(255,90,90,0.06)' : 'rgba(201,45,45,0.05)');
+  } else if (mode === 'live') {
+    headerBg = tierHeaderBg(tier, T.isDark);
+  } else {
+    headerBg = T.isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.02)';
+  }
+  let headerRight: { text: string; color: string };
+  if (showResult) {
+    headerRight = isCorrect
+      ? { text: '✓ CORRECT', color: T.green }
+      : { text: '✗ MISS', color: T.red };
+  } else if (mode === 'live') {
+    headerRight = { text: game.prob, color: tierColor(tier, T) };
+  } else {
+    headerRight = { text: game.prob, color: elite ? T.gold : T.blue };
+  }
+  let borderColor: string;
+  if (showResult) {
+    borderColor = isCorrect ? T.green + '33' : T.red + '33';
+  } else if (elite) {
+    borderColor = T.goldBorder;
+  } else {
+    borderColor = T.border;
+  }
   return (
-    <div style={{ background:elite ? T.cardElite : T.surface, border:`1px solid ${elite ? T.goldBorder : T.border}`, borderRadius:8, overflow:'hidden', width:'100%' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'5px 10px', borderBottom:`1px solid ${T.border2}`, background: T.isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.02)' }}>
+    <div style={{ background: elite ? T.cardElite : T.surface, border: `1px solid ${borderColor}`, borderRadius: 8, overflow: 'hidden', width: '100%' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'5px 10px', borderBottom:`1px solid ${T.border2}`, background: headerBg }}>
         <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, letterSpacing:'1px', color:T.textMuted, textTransform:'uppercase' }}>{game.label}</span>
-        <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:elite ? T.gold : T.blue }}>{game.prob}</span>
+        <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, fontWeight: showResult ? 600 : 400, color: headerRight.color }}>{headerRight.text}</span>
       </div>
       {teams.map(({t,win},i) => (
         <div key={i}>
@@ -212,102 +383,107 @@ function RoundPill({ label, elite, T }: { label: string; elite?: boolean; T: any
   );
 }
 
-function MobileBracket({ region, T }: { region: Region; T: any }) {
-
-  const d = data[region];
+function MobileBracket({ region, T, mode='default' }: { region: Region; T: any; mode?: CardMode }) {
+  const d = mode === 'live' ? liveData[region] : data[region];
+  const rounds = ['r64','r32','s16','e8'] as const;
+  const roundLabels = ['Round of 64','Round of 32','Sweet 16','Elite 8'];
   const s = { padding:'0 64px' };
   return (
     <div>
-      <div style={s}><RoundPill label="Round of 64" T={T} /></div>
-      <div style={{ display:'flex', flexDirection:'column', gap:8, ...s }}>{d.r64.map((g,i)=><GameCard key={i} game={g} fullName T={T} />)}</div>
-      <div style={s}><RoundPill label="Round of 32" T={T} /></div>
-      <div style={{ display:'flex', flexDirection:'column', gap:8, ...s }}>{d.r32.map((g,i)=><GameCard key={i} game={g} fullName T={T} />)}</div>
-      <div style={s}><RoundPill label="Sweet 16" T={T} /></div>
-      <div style={{ display:'flex', flexDirection:'column', gap:8, ...s }}>{d.s16.map((g,i)=><GameCard key={i} game={g} fullName T={T} />)}</div>
-      <div style={s}><RoundPill label="Elite 8" elite T={T} /></div>
-      <div style={{ display:'flex', flexDirection:'column', gap:8, ...s }}>
-        {d.e8.map((g,i)=><GameCard key={i} game={g} elite fullName T={T} />)}
-        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'2.5px', color:T.gold, textTransform:'uppercase', textAlign:'center', paddingTop:6 }}>Regional Champion</div>
-      </div>
+      {rounds.map((rk, ri) => (
+        <div key={rk}>
+          <div style={s}><RoundPill label={roundLabels[ri]} elite={rk==='e8'} T={T} /></div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8, ...s }}>
+            {d[rk].map((g: any, i: number) => {
+              const cr = mode === 'chalk-overlay' ? getChalkResult(region, rk, i) : null;
+              return <GameCard key={i} game={g} fullName elite={rk==='e8'} T={T} mode={mode} chalkResult={cr} />;
+            })}
+          </div>
+          {rk==='e8' && (
+            <div style={{ ...s }}>
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'2.5px', color:T.gold, textTransform:'uppercase', textAlign:'center', paddingTop:6 }}>Regional Champion</div>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
 
-const CARD_W    = 172;
-const CONN_W    = 18;
-const ROW_H     = 68;
-const NATURAL_W = CARD_W * 7 + CONN_W * 6;
+const CARD_W=172, CONN_W=18, ROW_H=68, NATURAL_W=CARD_W*7+CONN_W*6;
 
 function BracketConnector({ slots, mirrored, totalH, T }: { slots:number; mirrored:boolean; totalH:number; T: any }) {
   const ref = useRef<SVGSVGElement>(null);
   useEffect(() => {
     const svg = ref.current; if (!svg) return;
-    const draw = () => {
-      svg.innerHTML = '';
-      const w = CONN_W; const h = totalH;
-      const mk = (d: string) => { const p = document.createElementNS('http://www.w3.org/2000/svg','path'); p.setAttribute('d',d); p.setAttribute('fill','none'); p.setAttribute('stroke',T.connStroke); p.setAttribute('stroke-width','1'); p.setAttribute('stroke-linecap','round'); svg.appendChild(p); };
-      if (slots===1) { mk(`M 0 ${h/2} H ${w}`); return; }
-      const sH = h/slots;
-      for(let i=0;i<slots/2;i++){
-        const ty=sH*(i*2)+sH/2, by=sH*(i*2+1)+sH/2, my=(ty+by)/2;
-        mk(mirrored ? `M ${w} ${ty} H ${w*.38} V ${my} M ${w} ${by} H ${w*.38} V ${my} M ${w*.38} ${my} H 0` : `M 0 ${ty} H ${w*.62} V ${my} M 0 ${by} H ${w*.62} V ${my} M ${w*.62} ${my} H ${w}`);
-      }
-    };
-    draw();
-  }, [slots, mirrored, T.connStroke]);
+    svg.innerHTML = '';
+    const w = CONN_W;
+    const mk = (d: string) => { const p = document.createElementNS('http://www.w3.org/2000/svg','path'); p.setAttribute('d',d); p.setAttribute('fill','none'); p.setAttribute('stroke',T.connStroke); p.setAttribute('stroke-width','1'); p.setAttribute('stroke-linecap','round'); svg.appendChild(p); };
+    if (slots===1) { mk(`M 0 ${totalH/2} H ${w}`); return; }
+    const sH = totalH/slots;
+    for(let i=0;i<slots/2;i++){
+      const ty=sH*(i*2)+sH/2, by=sH*(i*2+1)+sH/2, my=(ty+by)/2;
+      mk(mirrored ? `M ${w} ${ty} H ${w*.38} V ${my} M ${w} ${by} H ${w*.38} V ${my} M ${w*.38} ${my} H 0` : `M 0 ${ty} H ${w*.62} V ${my} M 0 ${by} H ${w*.62} V ${my} M ${w*.62} ${my} H ${w}`);
+    }
+  }, [slots, mirrored, T.connStroke, totalH]);
   return <svg ref={ref} width={CONN_W} height={totalH} style={{ flexShrink:0 }} />;
 }
 
-function col(games: Game[], label: string, flex: number[], totalH: number, T: any, elite?: boolean) {
+function desktopCol(games: (Game|LiveGame)[], label: string, flex: number[], totalH: number, T: any, elite: boolean, mode: CardMode, region: Region, roundKey: string, indexOffset: number = 0) {
   return (
     <div style={{ width:CARD_W, flexShrink:0, display:'flex', flexDirection:'column', height:totalH+28 }}>
       <div style={{ height:28, display:'flex', alignItems:'flex-end', justifyContent:'center', paddingBottom:5 }}>
         <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, letterSpacing:'1.5px', color:elite ? T.gold : T.textMuted, textTransform:'uppercase' }}>{label}</span>
       </div>
       <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
-        {games.map((g,i) => (
-          <div key={i} style={{ flex:flex[i], display:'flex', alignItems:'center', padding:'2px 0' }}>
-            <GameCard game={g} elite={elite} T={T} />
-          </div>
-        ))}
+        {games.map((g,i) => {
+          const cr = mode === 'chalk-overlay' ? getChalkResult(region, roundKey, i + indexOffset) : null;
+          return (
+            <div key={i} style={{ flex:flex[i], display:'flex', alignItems:'center', padding:'2px 0' }}>
+              <GameCard game={g} elite={elite} T={T} mode={mode} chalkResult={cr} />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function DesktopBracket({ region, scale, T }: { region: Region; scale: number; T: any }) {
-  const d = data[region];
+function DesktopBracket({ region, scale, T, mode='default' }: { region: Region; scale: number; T: any; mode?: CardMode }) {
+  const d = mode === 'live' ? liveData[region] : data[region];
   const totalH = ROW_H * 8;
   return (
     <div style={{ transformOrigin:'top left', transform:`scale(${scale})`, width:NATURAL_W, height:(totalH+28) }}>
       <div style={{ display:'flex', alignItems:'flex-start', width:NATURAL_W }}>
-        {col(d.r64.slice(0,4),'Round of 64',[1,1,1,1],totalH, T)}
+        {desktopCol(d.r64.slice(0,4),'Round of 64',[1,1,1,1],totalH,T,false,mode,region,'r64')}
         <BracketConnector slots={4} mirrored={false} totalH={totalH} T={T} />
-        {col(d.r32.slice(0,2),'Round of 32',[2,2],totalH, T)}
+        {desktopCol(d.r32.slice(0,2),'Round of 32',[2,2],totalH,T,false,mode,region,'r32')}
         <BracketConnector slots={2} mirrored={false} totalH={totalH} T={T} />
-        {col([d.s16[0]],'Sweet 16',[4],totalH, T)}
+        {desktopCol([d.s16[0]],'Sweet 16',[4],totalH,T,true,mode,region,'s16')}
         <BracketConnector slots={1} mirrored={false} totalH={totalH} T={T} />
         <div style={{ width:CARD_W, flexShrink:0, display:'flex', flexDirection:'column', height:totalH+28 }}>
           <div style={{ height:28, display:'flex', alignItems:'flex-end', justifyContent:'center', paddingBottom:5 }}>
             <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, letterSpacing:'1.5px', color:T.gold, textTransform:'uppercase' }}>Elite 8</span>
           </div>
           <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
-            <div style={{ width:'100%' }}><GameCard game={d.e8[0]} elite T={T} /></div>
+            <div style={{ width:'100%' }}>
+              <GameCard game={d.e8[0]} elite T={T} mode={mode} chalkResult={mode==='chalk-overlay' ? getChalkResult(region,'e8',0) : null} />
+            </div>
             <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, letterSpacing:'1.5px', color:T.gold, textTransform:'uppercase' }}>Regional Champion</div>
           </div>
         </div>
         <BracketConnector slots={1} mirrored={true} totalH={totalH} T={T} />
-        {col([d.s16[1]],'Sweet 16',[4],totalH, T, true)}
+        {desktopCol([d.s16[1]],'Sweet 16',[4],totalH,T,true,mode,region,'s16',1)}
         <BracketConnector slots={2} mirrored={true} totalH={totalH} T={T} />
-        {col(d.r32.slice(2,4),'Round of 32',[2,2],totalH, T)}
+        {desktopCol(d.r32.slice(2,4),'Round of 32',[2,2],totalH,T,false,mode,region,'r32',2)}
         <BracketConnector slots={4} mirrored={true} totalH={totalH} T={T} />
-        {col(d.r64.slice(4,8),'Round of 64',[1,1,1,1],totalH, T)}
+        {desktopCol(d.r64.slice(4,8),'Round of 64',[1,1,1,1],totalH,T,false,mode,region,'r64',4)}
       </div>
     </div>
   );
 }
 
-function ScaledBracket({ region, T }: { region: Region; T: any }) {
+function ScaledBracket({ region, T, mode='default' }: { region: Region; T: any; mode?: CardMode }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   useEffect(() => {
@@ -319,12 +495,82 @@ function ScaledBracket({ region, T }: { region: Region; T: any }) {
   }, []);
   return (
     <div ref={wrapRef} style={{ width:'100%', overflow:'hidden', height:(ROW_H*8+28)*scale }}>
-      <DesktopBracket region={region} scale={scale} T={T} />
+      <DesktopBracket region={region} scale={scale} T={T} mode={mode} />
     </div>
   );
 }
 
-function FinalFourSection({ isMobile, T }: { isMobile: boolean; T: any }) {
+function AccumulatorPanel({ acc, T }: { acc: ReturnType<typeof computeAccumulator>; T: any }) {
+  const deltaColor = acc.delta >= 0 ? T.green : T.red;
+  const deltaSign = acc.delta >= 0 ? '+' : '';
+  return (
+    <div>
+      <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, letterSpacing:'2px', color:T.textMuted, textTransform:'uppercase', marginBottom:16 }}>Model Calibration</div>
+      {[
+        { label:'Games Completed', value:`${acc.correct} / ${acc.total}`, color:T.blue },
+        { label:'Expected Accuracy', value:`${acc.expectedAcc.toFixed(1)}%`, color:T.textSub },
+        { label:'Actual Accuracy', value:`${acc.actualAcc.toFixed(1)}%`, color:T.accent },
+        { label:'vs Expected', value:`${deltaSign}${acc.delta.toFixed(1)}%`, color:deltaColor },
+      ].map(({label,value,color}) => (
+        <div key={label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderBottom:`1px solid ${T.border2}` }}>
+          <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:T.textMuted, letterSpacing:'1px', textTransform:'uppercase' }}>{label}</span>
+          <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:18, color }}>{value}</span>
+        </div>
+      ))}
+      <div style={{ marginTop:14 }}>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:8, letterSpacing:'1.5px', color:T.textMuted, textTransform:'uppercase', marginBottom:8 }}>By Confidence Tier</div>
+        {acc.tierStats.filter(t => t.total > 0).map(tier => (
+          <div key={tier.label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 0', borderBottom:`1px solid ${T.border2}` }}>
+            <div>
+              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted }}>{tier.label}</span>
+              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:T.textMuted, marginLeft:6 }}>({tier.correct}/{tier.total})</span>
+            </div>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted }}>{tier.expected.toFixed(0)}% exp</span>
+              <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:14, color: tier.actual >= tier.expected ? T.green : T.red }}>{tier.actual.toFixed(0)}%</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+let isMobileGlobal = false;
+
+function ChalkVsRealityBar({ T }: { T: any }) {
+  const acc = computeAccumulator();
+  if (acc.total === 0) return null;
+  return (
+    <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:isMobileGlobal?'16px':'16px 24px', marginBottom:28, display:'flex', flexWrap:'wrap', gap:isMobileGlobal?16:32, alignItems:'center' }}>
+      <div>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:T.textMuted, textTransform:'uppercase', letterSpacing:'1.5px', marginBottom:4 }}>Chalk Accuracy</div>
+        <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:24, color:T.accent }}>{acc.correct} / {acc.total}</div>
+      </div>
+      <div>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:T.textMuted, textTransform:'uppercase', letterSpacing:'1.5px', marginBottom:4 }}>Actual vs Expected</div>
+        <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:24, color: acc.delta >= 0 ? T.green : T.red }}>{acc.actualAcc.toFixed(1)}% vs {acc.expectedAcc.toFixed(1)}%</div>
+      </div>
+      {acc.totalMisses > 0 && (
+        <div>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:T.textMuted, textTransform:'uppercase', letterSpacing:'1.5px', marginBottom:4 }}>Misses in Toss-Up Range</div>
+          <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:24, color:T.gold }}>{acc.missesInTossup} / {acc.totalMisses}</div>
+        </div>
+      )}
+      <div style={{ flex:1, minWidth:200 }}>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted, lineHeight:1.7 }}>
+          {acc.delta >= -3
+            ? `The model is performing within ${Math.abs(acc.delta).toFixed(1)}% of expected accuracy. Probabilistic models assign likelihoods, not certainties — misses in the toss-up range are expected outcomes.`
+            : `The model is ${Math.abs(acc.delta).toFixed(1)}% below expected accuracy. ${acc.missesInTossup} of ${acc.totalMisses} misses were in the toss-up or moderate confidence tier, where upsets are statistically expected.`
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FinalFourSection({ isMobile, T, mode='default' }: { isMobile: boolean; T: any; mode?: CardMode }) {
+  const acc = mode === 'live' ? computeAccumulator() : null;
   return (
     <div style={{ marginBottom:isMobile?48:60 }}>
       <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:24, paddingBottom:14, borderBottom:`1px solid ${T.goldBorder}` }}>
@@ -334,29 +580,23 @@ function FinalFourSection({ isMobile, T }: { isMobile: boolean; T: any }) {
       {isMobile ? (
         <div>
           <div style={{ padding:'0 64px' }}><RoundPill label="Final Four" elite T={T} /></div>
-          <div style={{ display:'flex', flexDirection:'column', gap:8, padding:'0 64px' }}>{FF_DATA.f4.map((g,i)=><GameCard key={i} game={g} elite fullName T={T} />)}</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8, padding:'0 64px' }}>{FF_DATA.f4.map((g,i)=><GameCard key={i} game={g} elite fullName T={T} mode={mode} />)}</div>
           <div style={{ padding:'0 64px' }}><RoundPill label="Championship" elite T={T} /></div>
-          <div style={{ display:'flex', flexDirection:'column', gap:8, padding:'0 64px' }}><GameCard game={FF_DATA.championship} elite fullName T={T} /></div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8, padding:'0 64px' }}><GameCard game={FF_DATA.championship} elite fullName T={T} mode={mode} /></div>
           <div style={{ marginTop:24 }}><ChampionCard c={FF_DATA.champion} T={T} /></div>
+          {acc && <div style={{ marginTop:24, padding:'0 64px' }}><AccumulatorPanel acc={acc} T={T} /></div>}
         </div>
       ) : (
         <div style={{ display:'flex', alignItems:'center', gap:0 }}>
           <div style={{ flexShrink:0, display:'flex', flexDirection:'column', gap:10, width:CARD_W }}>
             <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, letterSpacing:'1.5px', color:T.gold, textTransform:'uppercase', marginBottom:2 }}>Final Four</div>
-            <GameCard game={FF_DATA.f4[0]} elite T={T} />
-            <GameCard game={FF_DATA.f4[1]} elite T={T} />
+            <GameCard game={FF_DATA.f4[0]} elite T={T} mode={mode} />
+            <GameCard game={FF_DATA.f4[1]} elite T={T} mode={mode} />
           </div>
-          {(() => {
-            const cH=68, gap=10, total=cH*2+gap, mid=total/2, y1=cH/2, y2=cH+gap+cH/2, w=32;
-            return (
-              <svg width={w} height={total} style={{ flexShrink:0 }}>
-                <path d={`M 0 ${y1} H ${w*.5} V ${mid} M 0 ${y2} H ${w*.5} V ${mid} M ${w*.5} ${mid} H ${w}`} fill="none" stroke={T.connStroke} strokeWidth="1" strokeLinecap="round"/>
-              </svg>
-            );
-          })()}
+          {(()=>{const cH=68,gap=10,total=cH*2+gap,mid=total/2,y1=cH/2,y2=cH+gap+cH/2,w=32;return(<svg width={w} height={total} style={{flexShrink:0}}><path d={`M 0 ${y1} H ${w*.5} V ${mid} M 0 ${y2} H ${w*.5} V ${mid} M ${w*.5} ${mid} H ${w}`} fill="none" stroke={T.connStroke} strokeWidth="1" strokeLinecap="round"/></svg>);})()}
           <div style={{ flexShrink:0, width:CARD_W+20, alignSelf:'center' }}>
             <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, letterSpacing:'1.5px', color:T.gold, textTransform:'uppercase', marginBottom:6 }}>Championship</div>
-            <GameCard game={FF_DATA.championship} elite T={T} />
+            <GameCard game={FF_DATA.championship} elite T={T} mode={mode} />
           </div>
           <div style={{ width:32, flexShrink:0 }} />
           <div style={{ width:196, flexShrink:0, position:'relative', borderRadius:10, background:`linear-gradient(145deg,${T.goldSub.replace('0.07','0.18')} 0%,${T.goldSub} 100%)`, border:`1.5px solid ${T.goldBorder}`, padding:'16px', textAlign:'center', alignSelf:'center' }}>
@@ -366,22 +606,23 @@ function FinalFourSection({ isMobile, T }: { isMobile: boolean; T: any }) {
             <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:26, letterSpacing:'2px', textTransform:'uppercase', marginBottom:4, color: T.isDark ? '#F5D67A' : '#7A4E00' }}>{FF_DATA.champion.name}</div>
             <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:T.gold, opacity:0.7, letterSpacing:'1.5px', marginBottom:12 }}>SEED #{FF_DATA.champion.seed} · {FF_DATA.champion.conf}</div>
             <div style={{ display:'flex', justifyContent:'center', gap:20, borderTop:`1px solid ${T.goldBorder}`, paddingTop:10 }}>
-              {[['CMBKi+', FF_DATA.champion.cmbki, T.accent],['Score', String(FF_DATA.champion.score), T.gold]].map(([label,val,color])=>(
-                <div key={String(label)}>
-                  <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted, textTransform:'uppercase', letterSpacing:'1px', marginBottom:3 }}>{label}</div>
-                  <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:18, color: color as string }}>{val}</div>
-                </div>
-              ))}
+              {[['CMBKi+',FF_DATA.champion.cmbki,T.accent],['Score',String(FF_DATA.champion.score),T.gold]].map(([l,v,c])=>(<div key={String(l)}><div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:T.textMuted,textTransform:'uppercase',letterSpacing:'1px',marginBottom:3}}>{l}</div><div style={{fontFamily:"'Rajdhani',sans-serif",fontWeight:700,fontSize:18,color:c as string}}>{v}</div></div>))}
             </div>
           </div>
           <div style={{ flex:1, minWidth:0, marginLeft:32, alignSelf:'stretch', display:'flex', flexDirection:'column', justifyContent:'center', borderLeft:`1px solid ${T.border}`, paddingLeft:32 }}>
-            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, letterSpacing:'2px', color:T.textMuted, textTransform:'uppercase', marginBottom:16 }}>Tournament At-a-Glance</div>
-            {[{label:'Avg Win Margin',value:'+14.2',color:T.blue},{label:'Upsets Called',value:'4 / 8',color:T.accent},{label:'Chalk Picks',value:'63 / 67',color:T.blue},{label:'Model Conf.',value:'74.1%',color:T.gold}].map(({label,value,color})=>(
-              <div key={label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderBottom:`1px solid ${T.border2}` }}>
-                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:T.textMuted, letterSpacing:'1px', textTransform:'uppercase' }}>{label}</span>
-                <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:18, color }}>{value}</span>
-              </div>
-            ))}
+            {acc ? (
+              <AccumulatorPanel acc={acc} T={T} />
+            ) : (
+              <>
+                <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, letterSpacing:'2px', color:T.textMuted, textTransform:'uppercase', marginBottom:16 }}>Tournament At-a-Glance</div>
+                {[{label:'Avg Win Margin',value:'+14.2',color:T.blue},{label:'Upsets Called',value:'4 / 8',color:T.accent},{label:'Chalk Picks',value:'63 / 67',color:T.blue},{label:'Model Conf.',value:'74.1%',color:T.gold}].map(({label,value,color})=>(
+                  <div key={label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderBottom:`1px solid ${T.border2}` }}>
+                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:T.textMuted, letterSpacing:'1px', textTransform:'uppercase' }}>{label}</span>
+                    <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:18, color }}>{value}</span>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -389,196 +630,196 @@ function FinalFourSection({ isMobile, T }: { isMobile: boolean; T: any }) {
   );
 }
 
-function RegionBlock({ region, isMobile, T }: { region: Region; isMobile: boolean; T: any }) {
-  const d = data[region];
+function RegionBlock({ region, isMobile, T, mode='default' }: { region: Region; isMobile: boolean; T: any; mode?: CardMode }) {
+  const d = mode === 'live' ? liveData[region] : data[region];
   return (
     <div style={{ marginBottom:isMobile?48:60 }}>
       <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:18, paddingBottom:14, borderBottom:`1px solid ${T.border}` }}>
         <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:18, letterSpacing:'2px', textTransform:'uppercase', color:T.text }}>{region} Regional</span>
         <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted, letterSpacing:'1.5px', textTransform:'uppercase' }}>{d.venue}</span>
       </div>
-      {isMobile ? <MobileBracket region={region} T={T} /> : <ScaledBracket region={region} T={T} />}
+      {isMobile ? <MobileBracket region={region} T={T} mode={mode} /> : <ScaledBracket region={region} T={T} mode={mode} />}
     </div>
   );
 }
 
-function SectionHeader({ num, title, T }: { num: string; title: string; T: any }) {
+function SectionHeader({ num, title, T, subtitle }: { num: string; title: string; T: any; subtitle?: string }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:28 }}>
+    <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:28, flexWrap:'wrap' }}>
       <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:T.accent, letterSpacing:'2px', background:T.accentSub, border:`1px solid ${T.accentBorder}`, padding:'4px 10px', borderRadius:6 }}>{num}</span>
       <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:20, letterSpacing:'1.5px', textTransform:'uppercase', color:T.text }}>{title}</span>
+      {subtitle && <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted, letterSpacing:'1.5px', textTransform:'uppercase' }}>{subtitle}</span>}
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════
-   MAIN PAGE
-══════════════════════════════════════════════ */
 export default function MarchMadnessPage() {
-  const [section, setSection] = useState<'bracket'|'rankings'|'predictions'|'odds'>('bracket');
+  const [section, setSection] = useState<'live'|'predictions'|'odds'|'rankings'|'chalk'>('live');
   const [isMobile, setIsMobile] = useState(false);
+  const animRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // ALL hooks must be called before any early returns (Rules of Hooks)
-  const { themeObj } = useTheme();
+  const [rkSort, setRkSort]       = useState<keyof CbbTeam>('cmbki');
+  const [rkSortDir, setRkSortDir] = useState<1|-1>(-1);
+  const [rkSearch, setRkSearch]   = useState('');
+  const [rkConf, setRkConf]       = useState('');
+
+  const rkSorted = useMemo(() => [...cbbTeams].sort((a, b) => {
+    const av = a[rkSort], bv = b[rkSort];
+    if (typeof av === 'string' && typeof bv === 'string') return rkSortDir * av.localeCompare(bv);
+    return rkSortDir * ((av as number) - (bv as number));
+  }), [rkSort, rkSortDir]);
+
+  const rkFiltered = useMemo(() => rkSorted.filter(t =>
+    (!rkSearch || t.name.toLowerCase().includes(rkSearch.toLowerCase())) &&
+    (!rkConf || t.conf === rkConf)
+  ), [rkSorted, rkSearch, rkConf]);
+
+  function handleRkSort(key: keyof CbbTeam) {
+    const lowerBetter = key === 'defEff';
+    const defaultDir: 1|-1 = (key === 'name' || key === 'conf' || key === 'record' || key === 'q1Record') ? 1 : lowerBetter ? 1 : -1;
+    if (rkSort === key) setRkSortDir(d => (d === 1 ? -1 : 1));
+    else { setRkSort(key); setRkSortDir(defaultDir); }
+  }
+
+  const { themeObj, mounted } = useTheme();
   const T = themeObj;
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 900);
+    const check = () => { const m = window.innerWidth < 900; setIsMobile(m); isMobileGlobal = m; };
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => { entries.forEach((entry) => { if (entry.isIntersecting) { entry.target.classList.add('anim-in'); observer.unobserve(entry.target); } }); },
+      { threshold: 0.06 }
+    );
+    animRefs.current.forEach((el) => { if (el) observer.observe(el); });
+    return () => observer.disconnect();
+  }, [mounted, section]);
+
+  function aref(i: number) { return (el: HTMLDivElement | null) => { animRefs.current[i] = el; }; }
+
+  if (!mounted) {
+    return <div style={{ background:'#0B0E14', minHeight:'100vh' }} />;
+  }
+
   return (
-    <div style={{ background:T.bg, color:T.text, minHeight:'100vh', fontFamily:"'DM Sans',sans-serif", transition:'background .25s, color .25s' }}>
-        <NavBar active="march-madness" />
+    <div style={{ background:T.bg, color:T.text, minHeight:'100vh', fontFamily:"'DM Sans',sans-serif", transition:'background .3s, color .3s' }}>
+      <NavBar active="march-madness" />
 
-        {/* HERO — always dark */}
-        <div style={{ position:'relative', overflow:'hidden', background:'linear-gradient(145deg,#0a0e1a 0%,#140820 45%,#0c1a14 100%)', padding:isMobile?'48px 20px 40px':'72px 40px 56px', borderBottom:'1px solid rgba(255,140,66,0.15)' }}>
-          <div style={{ position:'absolute', right:'-40px', top:'-40px', fontSize:isMobile?200:400, opacity:0.04, transform:'rotate(15deg)', pointerEvents:'none', lineHeight:1 }}>🏀</div>
-          <div style={{ position:'absolute', bottom:'-100px', right:'10%', width:600, height:400, background:'radial-gradient(ellipse,rgba(255,100,0,0.12) 0%,transparent 65%)', pointerEvents:'none' }} />
-          <div style={{ maxWidth:1280, margin:'0 auto', position:'relative', zIndex:1 }}>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,140,66,0.1)', border:'1px solid rgba(255,140,66,0.25)', color:'#FF8C42', fontFamily:"'DM Mono',monospace", fontSize:10, letterSpacing:'2px', textTransform:'uppercase', padding:'5px 14px', borderRadius:20, marginBottom:20 }}>
-              <span style={{ width:6, height:6, background:'#FF8C42', borderRadius:'50%', display:'inline-block', animation:'pulse 2s infinite' }} />
-              CMBKi+ Model · 2026 NCAA Tournament
-            </div>
-            <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:isMobile?'clamp(48px,12vw,72px)':'clamp(64px,8vw,96px)', lineHeight:0.9, letterSpacing:'2px', textTransform:'uppercase', marginBottom:20 }}>
-              <div style={{ color:'#F5F7FA' }}>MARCH</div>
-              <div style={{ background:'linear-gradient(90deg,#FF8C42,#FF4444)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>MADNESS</div>
-            </div>
-            <p style={{ color:'#B8C4D4', fontSize:15, lineHeight:1.75, maxWidth:560, marginBottom:36 }}>
-              The <span style={{ color:'#FF8C42', fontWeight:600 }}>CMBKi+</span> efficiency index combines tempo-free efficiency, strength of schedule, talent composite, and momentum to rank all 68 tournament teams.
-            </p>
-            <div style={{ display:'flex', gap:isMobile?24:40, flexWrap:'wrap' }}>
-              {[['68','Teams'],['67','Games'],['CMBKi+','Model'],["'26",'Tournament']].map(([v,l])=>(
-                <div key={l}>
-                  <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:28, color:'#FF8C42', letterSpacing:1 }}>{v}</div>
-                  <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'#5A6480', textTransform:'uppercase', letterSpacing:'1.5px' }}>{l}</div>
-                </div>
-              ))}
-            </div>
+      {/* HERO */}
+      <div className="anim-fade-up anim-in" style={{ position:'relative', overflow:'hidden', background:'linear-gradient(145deg,#0a0e1a 0%,#140820 45%,#0c1a14 100%)', padding:isMobile?'48px 20px 40px':'72px 40px 56px', borderBottom:'1px solid rgba(255,140,66,0.15)' }}>
+        <div style={{ position:'absolute', right:'-40px', top:'-40px', fontSize:isMobile?200:400, opacity:0.04, transform:'rotate(15deg)', pointerEvents:'none', lineHeight:1 }}>🏀</div>
+        <div style={{ position:'absolute', bottom:'-100px', right:'10%', width:600, height:400, background:'radial-gradient(ellipse,rgba(255,100,0,0.12) 0%,transparent 65%)', pointerEvents:'none' }} />
+        <div style={{ maxWidth:1280, margin:'0 auto', position:'relative', zIndex:1 }}>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,140,66,0.1)', border:'1px solid rgba(255,140,66,0.25)', color:'#FF8C42', fontFamily:"'DM Mono',monospace", fontSize:10, letterSpacing:'2px', textTransform:'uppercase', padding:'5px 14px', borderRadius:20, marginBottom:20 }}>
+            <span style={{ width:6, height:6, background:'#FF8C42', borderRadius:'50%', display:'inline-block', animation:'pulse 2s infinite' }} />
+            CMBKi+ Model · 2026 NCAA Tournament
+          </div>
+          <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:isMobile?'clamp(48px,12vw,72px)':'clamp(64px,8vw,96px)', lineHeight:0.9, letterSpacing:'2px', textTransform:'uppercase', marginBottom:20 }}>
+            <div style={{ color:'#F5F7FA' }}>MARCH</div>
+            <div style={{ background:'linear-gradient(90deg,#FF8C42,#FF4444)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>MADNESS</div>
+          </div>
+          <p style={{ color:'#C8D4E8', fontSize:15, lineHeight:1.75, maxWidth:560, marginBottom:36 }}>
+            The <span style={{ color:'#FF8C42', fontWeight:600 }}>CMBKi+</span> efficiency index combines tempo-free efficiency, strength of schedule, talent composite, and momentum to rank all 68 tournament teams.
+          </p>
+          <div style={{ display:'flex', gap:isMobile?24:40, flexWrap:'wrap' }}>
+            {[['68','Teams'],['67','Games'],['CMBKi+','Model'],["'26",'Tournament']].map(([v,l])=>(<div key={l}><div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:28, color:'#FF8C42', letterSpacing:1 }}>{v}</div><div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'#8A94A8', textTransform:'uppercase', letterSpacing:'1.5px' }}>{l}</div></div>))}
           </div>
         </div>
+      </div>
 
-        {/* SECTION NAV */}
-        <div style={{ background:T.navBg, borderBottom:`1px solid ${T.borderStrong}`, position:'sticky', top:64, zIndex:90, overflowX:'auto', boxShadow: T.isDark ? 'none' : '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div style={{ maxWidth:1280, margin:'0 auto', display:'flex', padding:isMobile?'0 16px':'0 40px' }}>
-            {([['bracket','Bracket'],['rankings','Power Rankings'],['predictions','Predictions'],['odds','Champ Odds']] as const).map(([k,label])=>(
-              <button key={k} onClick={()=>setSection(k)} style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:600, fontSize:isMobile?11:13, letterSpacing:'1.5px', textTransform:'uppercase', padding:isMobile?'12px 10px':'14px 20px', color:section===k ? T.accent : T.textMuted, cursor:'pointer', border:'none', background:'transparent', borderBottom:section===k ? `2px solid ${T.accent}` : '2px solid transparent', marginBottom:-1, whiteSpace:'nowrap', transition:'color .2s' }}>{label}</button>
-            ))}
-          </div>
+      {/* SECTION NAV — Change 4: widened to 1800, tighter padding */}
+      <div style={{ background:T.navBg, borderBottom:`1px solid ${T.borderStrong}`, position:'sticky', top:64, zIndex:90, overflowX:'auto', boxShadow:T.isDark?'none':'0 1px 4px rgba(0,0,0,0.06)', transition:'background 0.25s ease' }}>
+        <div style={{ maxWidth:1800, margin:'0 auto', display:'flex', padding:isMobile?'0 12px':'0 18px' }}>
+          {([['live','Live Bracket'],['predictions','Predictions'],['odds','Champ Odds'],['rankings','Power Rankings'],['chalk','Chalk Bracket']] as const).map(([k,label])=>(
+            <button key={k} onClick={()=>setSection(k)} style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:600, fontSize:isMobile?11:13, letterSpacing:'1.5px', textTransform:'uppercase', padding:isMobile?'12px 10px':'14px 20px', color:section===k?T.accent:T.textMuted, cursor:'pointer', border:'none', background:'transparent', borderBottom:section===k?`2px solid ${T.accent}`:'2px solid transparent', marginBottom:-1, whiteSpace:'nowrap', transition:'color .2s' }}>{label}</button>
+          ))}
         </div>
+      </div>
 
-        <div style={{ maxWidth:1280, margin:'0 auto', padding:isMobile?'32px 16px 80px':'40px 40px 80px' }}>
+      {/* MAIN CONTENT — Change 1: widened to 1800, tighter padding */}
+      <div style={{ maxWidth:1800, margin:'0 auto', padding:isMobile?'24px 12px 72px':'32px 18px 80px' }}>
 
-          {section==='bracket' && (
-            <div>
-              <SectionHeader num="01" title="CMBKi+ Chalk Bracket — 2026 NCAA Tournament" T={T} />
-              {REGIONS.map(r=><RegionBlock key={r} region={r} isMobile={isMobile} T={T} />)}
-              <FinalFourSection isMobile={isMobile} T={T} />
+        {/* TAB 1: LIVE BRACKET */}
+        {section==='live' && (
+          <div>
+            <div className="anim-fade-up anim-in">
+              <SectionHeader num="01" title="CMBKi+ Live Bracket" subtitle={`Updated Through ${CURRENT_ROUND}`} T={T} />
+              <p style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:T.textMuted, lineHeight:1.8, maxWidth:640, marginBottom:28, marginTop:-16 }}>
+                Completed games show actual results with model accuracy. Remaining matchups are updated predictions. The model assigns probabilities, not certainties — a 60% pick that loses is a 40% outcome happening, not a miss.
+              </p>
             </div>
-          )}
-
-          {section==='rankings' && (
-            <div>
-              <SectionHeader num="02" title="CMBKi+ Power Rankings — All 68 Teams" T={T} />
-              <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:'hidden' }}>
-                <div style={{ display:'grid', gridTemplateColumns:isMobile?'40px 1fr 64px 64px':'44px 40px 1fr 64px 80px 80px 80px 64px', padding:'10px 16px', borderBottom:`1px solid ${T.border}`, background:T.surface2 }}>
-                  {(isMobile?['#','Team','CMBKi+','Seed']:['#','','Team','Seed','CMBKi+','Off Eff','Def Eff','SOS']).map((h,i)=>(
-                    <span key={i} style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:T.textMuted, textTransform:'uppercase', letterSpacing:'1.5px', textAlign:i<=2?'left':'right' }}>{h}</span>
-                  ))}
-                </div>
-                {RANKINGS.map((t,i)=>(
-                  <div key={i} style={{ display:'grid', gridTemplateColumns:isMobile?'40px 1fr 64px 64px':'44px 40px 1fr 64px 80px 80px 80px 64px', padding:'10px 16px', borderBottom:`1px solid ${T.border2}`, alignItems:'center', borderLeft:i<3?`3px solid ${T.accent}`:'3px solid transparent' }}>
-                    <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:18, color:T.text }}>{t.rank}</span>
-                    {!isMobile && <div style={{ width:28,height:28,borderRadius:'50%',background:t.logoColor,border:`1px solid ${T.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Rajdhani',sans-serif",fontWeight:700,fontSize:8,color:T.textMuted }}>{t.logo}</div>}
-                    <div>
-                      <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:600, fontSize:13, letterSpacing:'0.8px', textTransform:'uppercase', color:T.text }}>{t.name}</div>
-                      <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted }}>{t.conf}</div>
-                    </div>
-                    <span style={{ textAlign:'right' }}><span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, padding:'2px 5px', borderRadius:4, background:T.accentSub, color:T.accent, border:`1px solid ${T.accentBorder}` }}>{t.seed}</span></span>
-                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:12, color:T.accent, textAlign:'right' }}>{t.cmbki}</span>
-                    {!isMobile && <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.blue, textAlign:'right' }}>{t.off}</span>}
-                    {!isMobile && <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.textSub, textAlign:'right' }}>{t.def}</span>}
-                    {!isMobile && <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.textSub, textAlign:'right' }}>{t.sos}</span>}
-                  </div>
-                ))}
-                <div style={{ textAlign:'center', padding:'14px 0', fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted, letterSpacing:'1.5px' }}>SHOWING 10 OF 68 TEAMS</div>
+            {REGIONS.map((r,i) => (
+              <div key={r} className="anim-fade-up" ref={aref(i)} style={{ animationDelay:`${i*0.07}s` }}>
+                <RegionBlock region={r} isMobile={isMobile} T={T} mode="live" />
               </div>
+            ))}
+            <div className="anim-fade-up" ref={aref(REGIONS.length)}>
+              <FinalFourSection isMobile={isMobile} T={T} mode="live" />
             </div>
-          )}
+          </div>
+        )}
 
-          {section==='predictions' && (
-            <div>
-              <SectionHeader num="03" title="Game-by-Game Predictions" T={T} />
-              <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(auto-fill,minmax(340px,1fr))', gap:14 }}>
-                {GAME_PREDICTIONS.map((g,i)=>(
-                  <div key={i} style={{ background:T.surface, border:`1px solid ${g.upset ? T.red+'55' : T.border}`, borderRadius:12, overflow:'hidden' }}>
-                    <div style={{ background:g.upset ? (T.isDark?'rgba(255,68,68,0.06)':'rgba(192,57,43,0.05)') : T.surface2, padding:'8px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:`1px solid ${T.border2}` }}>
+        {/* TAB 2: PREDICTIONS */}
+        {section==='predictions' && (
+          <div>
+            <div className="anim-fade-up anim-in">
+              <SectionHeader num="02" title="Game-by-Game Predictions" T={T} />
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'repeat(auto-fill,minmax(340px,1fr))', gap:14 }}>
+              {GAME_PREDICTIONS.map((g,i)=>(
+                <div key={i} className="anim-fade-up" ref={aref(i)} style={{ animationDelay:`${i*0.06}s` }}>
+                  <div style={{ background:T.surface, border:`1px solid ${g.upset?T.red+'55':T.border}`, borderRadius:12, overflow:'hidden' }}>
+                    <div style={{ background:g.upset?(T.isDark?'rgba(255,68,68,0.06)':'rgba(192,57,43,0.05)'):T.surface2, padding:'8px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:`1px solid ${T.border2}` }}>
                       <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted, letterSpacing:'1.5px', textTransform:'uppercase' }}>{g.round}</span>
                       <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:g.upset?T.red:T.accent }}>{g.upset?'⚡ UPSET ALERT':g.date}</span>
                     </div>
                     <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:10 }}>
-                      {[g.top,g.bot].map((t,ti)=>(
-                        <div key={ti} style={{ display:'flex', alignItems:'center', gap:12 }}>
-                          <div style={{ width:22,height:22,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'DM Mono',monospace",fontSize:9,fontWeight:700,flexShrink:0,background:ti===0?(g.upset?T.isDark?'rgba(255,68,68,0.12)':'rgba(192,57,43,0.1)':T.accentSub):(T.isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'),color:ti===0?(g.upset?T.red:T.accent):T.textMuted,border:`1px solid ${ti===0?(g.upset?T.red+'55':T.accentBorder):T.border}` }}>{t.seed}</div>
-                          <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:600, fontSize:14, letterSpacing:'0.8px', textTransform:'uppercase', flex:1, color:ti===0?T.text:T.textMuted }}>{t.name}</span>
-                          <span style={{ fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:700, color:ti===0?(g.upset?T.red:T.accent):T.textMuted }}>{t.pct}</span>
-                        </div>
-                      ))}
+                      {[g.top,g.bot].map((t,ti)=>(<div key={ti} style={{ display:'flex', alignItems:'center', gap:12 }}><div style={{ width:22,height:22,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'DM Mono',monospace",fontSize:9,fontWeight:700,flexShrink:0,background:ti===0?(g.upset?T.isDark?'rgba(255,68,68,0.12)':'rgba(192,57,43,0.1)':T.accentSub):(T.isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'),color:ti===0?(g.upset?T.red:T.accent):T.textMuted,border:`1px solid ${ti===0?(g.upset?T.red+'55':T.accentBorder):T.border}` }}>{t.seed}</div><span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:600, fontSize:14, letterSpacing:'0.8px', textTransform:'uppercase', flex:1, color:ti===0?T.text:T.textMuted }}>{t.name}</span><span style={{ fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:700, color:ti===0?(g.upset?T.red:T.accent):T.textMuted }}>{t.pct}</span></div>))}
                     </div>
-                    <div style={{ padding:'0 16px 10px' }}>
-                      <div style={{ height:3, background:T.barTrack, borderRadius:2, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:g.top.pct, background:g.upset?`linear-gradient(90deg,${T.red},${T.red}aa)`:`linear-gradient(90deg,${T.accent},${T.red})`, borderRadius:2 }} />
-                      </div>
-                    </div>
+                    <div style={{ padding:'0 16px 10px' }}><div style={{ height:3, background:T.barTrack, borderRadius:2, overflow:'hidden' }}><div style={{ height:'100%', width:g.top.pct, background:g.upset?`linear-gradient(90deg,${T.red},${T.red}aa)`:`linear-gradient(90deg,${T.accent},${T.red})`, borderRadius:2 }} /></div></div>
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', padding:'10px 16px', gap:8, borderTop:`1px solid ${T.border2}` }}>
-                      {[['Spread',g.spread,true],['Margin',g.margin,false],['Variance',g.variance,false]].map(([l,v,hi])=>(
-                        <div key={String(l)} style={{ textAlign:'center' }}>
-                          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:T.textMuted, textTransform:'uppercase', letterSpacing:'1px', marginBottom:3 }}>{l}</div>
-                          <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:15, color:hi?T.accent:T.textSub }}>{v}</div>
-                        </div>
-                      ))}
+                      {[['Spread',g.spread,true],['Margin',g.margin,false],['Variance',g.variance,false]].map(([l,v,hi])=>(<div key={String(l)} style={{ textAlign:'center' }}><div style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:T.textMuted, textTransform:'uppercase', letterSpacing:'1px', marginBottom:3 }}>{l}</div><div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:15, color:hi?T.accent:T.textSub }}>{v}</div></div>))}
                     </div>
                     <div style={{ padding:'10px 16px', background:T.accentSub, borderTop:`1px solid ${T.accentBorder}`, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                       <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted, letterSpacing:'1.5px', textTransform:'uppercase' }}>Score Pick</span>
                       <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:15, color:g.upset?T.red:T.accent, letterSpacing:'1px' }}>{g.score}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-              <div style={{ textAlign:'center', paddingTop:20, fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted, letterSpacing:'1.5px' }}>SHOWING 6 OF 67 GAMES</div>
+                </div>
+              ))}
             </div>
-          )}
+            <div style={{ textAlign:'center', paddingTop:20, fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted, letterSpacing:'1.5px' }}>SHOWING 6 OF 67 GAMES</div>
+          </div>
+        )}
 
-          {section==='odds' && (
-            <div>
-              <SectionHeader num="04" title="Advancement Odds — Every Round to Champion" T={T} />
+        {/* TAB 3: CHAMP ODDS */}
+        {section==='odds' && (
+          <div>
+            <div className="anim-fade-up anim-in"><SectionHeader num="03" title="Advancement Odds — Every Round to Champion" T={T} /></div>
+            <div className="anim-fade-up" ref={aref(0)}>
               <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, overflow:'hidden' }}>
                 <div style={{ display:'grid', gridTemplateColumns:isMobile?'36px 1fr 80px 70px':'44px 1fr 70px 70px 70px 70px 70px 90px', background:T.surface2, borderBottom:`1px solid ${T.border}`, padding:'10px 16px' }}>
-                  {(isMobile?['#','Team','F4','Champion']:['#','Team','R32','S16','E8','F4','Final','Champion']).map((h,i)=>(
-                    <span key={i} style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:T.textMuted, textTransform:'uppercase', letterSpacing:'1.5px', textAlign:i<=1?'left':'right' }}>{h}</span>
-                  ))}
+                  {(isMobile?['#','Team','F4','Champion']:['#','Team','R32','S16','E8','F4','Final','Champion']).map((h,i)=>(<span key={i} style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:T.textMuted, textTransform:'uppercase', letterSpacing:'1.5px', textAlign:i<=1?'left':'right' }}>{h}</span>))}
                 </div>
                 {ODDS.map((t,i)=>(
                   <div key={i} style={{ display:'grid', gridTemplateColumns:isMobile?'36px 1fr 80px 70px':'44px 1fr 70px 70px 70px 70px 70px 90px', padding:'10px 16px', borderBottom:`1px solid ${T.border2}`, alignItems:'center' }}>
                     <span style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:16, color:T.textMuted }}>{t.rank}</span>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                       <div style={{ width:28,height:28,borderRadius:'50%',background:t.logoColor,border:`1px solid ${T.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Rajdhani',sans-serif",fontWeight:700,fontSize:8,color:T.textMuted,flexShrink:0 }}>{t.logo}</div>
-                      <div>
-                        <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:600, fontSize:13, letterSpacing:'0.8px', textTransform:'uppercase', color:T.text }}>{t.name}</div>
-                        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted }}>{t.conf}</div>
-                      </div>
+                      <div><div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:600, fontSize:13, letterSpacing:'0.8px', textTransform:'uppercase', color:T.text }}>{t.name}</div><div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted }}>{t.conf}</div></div>
                     </div>
-                    {!isMobile && <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.blue, textAlign:'right' }}>{t.r32}</span>}
-                    {!isMobile && <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.blue, textAlign:'right' }}>{t.s16}</span>}
-                    {!isMobile && <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.blue, textAlign:'right' }}>{t.e8}</span>}
+                    {!isMobile&&<span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.blue, textAlign:'right' }}>{t.r32}</span>}
+                    {!isMobile&&<span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.blue, textAlign:'right' }}>{t.s16}</span>}
+                    {!isMobile&&<span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.blue, textAlign:'right' }}>{t.e8}</span>}
                     <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.blue, textAlign:'right' }}>{t.f4}</span>
-                    {!isMobile && <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.accent, textAlign:'right' }}>{t.final}</span>}
+                    {!isMobile&&<span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.accent, textAlign:'right' }}>{t.final}</span>}
                     <div style={{ display:'flex', alignItems:'center', gap:8, justifyContent:'flex-end' }}>
-                      <div style={{ width:48, height:4, background:T.barTrack, borderRadius:2, overflow:'hidden', flexShrink:0 }}>
-                        <div style={{ height:'100%', width:`${t.bar}%`, background:`linear-gradient(90deg,${T.accent},${T.red})`, borderRadius:2 }} />
-                      </div>
+                      <div style={{ width:48, height:4, background:T.barTrack, borderRadius:2, overflow:'hidden', flexShrink:0 }}><div style={{ height:'100%', width:`${t.bar}%`, background:`linear-gradient(90deg,${T.accent},${T.red})`, borderRadius:2 }} /></div>
                       <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:T.accent, minWidth:36, textAlign:'right' }}>{t.champ}</span>
                     </div>
                   </div>
@@ -586,22 +827,317 @@ export default function MarchMadnessPage() {
                 <div style={{ textAlign:'center', padding:'14px 0', fontFamily:"'DM Mono',monospace", fontSize:9, color:T.textMuted, letterSpacing:'1.5px' }}>SHOWING 8 OF 68 TEAMS</div>
               </div>
             </div>
-          )}
-
-        </div>
-
-        {/* FOOTER */}
-        <div style={{ borderTop:`1px solid ${T.border}`, padding:isMobile?'24px 20px':'28px 40px' }}>
-          <div style={{ maxWidth:1280, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
-            <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:17, color:T.textMuted, letterSpacing:'1.5px', textTransform:'uppercase' }}>CFBPredictor<span style={{ color:T.gold }}>.com</span></div>
-            <p style={{ fontSize:11, color:T.textMuted, maxWidth:580, lineHeight:1.6 }}>CMBKi+ predictions are model-generated projections. Not intended as betting advice.</p>
           </div>
-        </div>
+        )}
 
-        <style>{`
-          @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
-          button:hover{opacity:.85;}
-        `}</style>
+        {/* TAB 4: POWER RANKINGS — Change 2: full replacement with wider layout */}
+        {section==='rankings' && (
+          <div>
+            <div className="anim-fade-up anim-in">
+              <SectionHeader num="04" title="CMBKi+ Power Rankings — All 68 Teams" T={T} />
+            </div>
+
+            <div className="anim-fade-up" ref={aref(0)}>
+              {/* Controls */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 16,
+                  marginBottom: 18,
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0 2px',
+                }}
+              >
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    placeholder="Search team..."
+                    value={rkSearch}
+                    onChange={e => setRkSearch(e.target.value)}
+                    style={{
+                      fontFamily: "'DM Mono',monospace",
+                      fontSize: 13,
+                      padding: '0 12px',
+                      height: 32,
+                      borderRadius: 8,
+                      border: `1px solid ${T.border}`,
+                      background: T.surface,
+                      color: T.text,
+                      outline: 'none',
+                      width: isMobile ? '100%' : 220,
+                      minWidth: isMobile ? undefined : 220,
+                    }}
+                  />
+                  <select
+                    value={rkConf}
+                    onChange={e => setRkConf(e.target.value)}
+                    style={{
+                      fontFamily: "'DM Mono',monospace",
+                      fontSize: 13,
+                      padding: '0 10px',
+                      height: 32,
+                      borderRadius: 8,
+                      border: `1px solid ${T.border}`,
+                      background: T.surface,
+                      color: T.text,
+                      outline: 'none',
+                      minWidth: isMobile ? '100%' as any : 140,
+                    }}
+                  >
+                    <option value="">All Conferences</option>
+                    {CBB_CONFS.map((c: string) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <span
+                  style={{
+                    fontFamily: "'DM Mono',monospace",
+                    fontSize: 11,
+                    color: T.textMuted,
+                    letterSpacing: '1.5px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {rkFiltered.length} OF {cbbTeams.length} TEAMS
+                </span>
+              </div>
+
+              {/* Table */}
+              <div
+                style={{
+                  background: T.surface,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 24,
+                  overflow: 'hidden',
+                  boxShadow: T.isDark ? '0 14px 36px rgba(0,0,0,0.22)' : '0 10px 24px rgba(0,0,0,0.06)',
+                }}
+              >
+                <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+                  <table
+                    style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      minWidth: isMobile ? 720 : 1100,
+                      tableLayout: 'fixed',
+                    }}
+                  >
+                    <thead>
+                      <tr
+                        style={{
+                          background: T.surface2,
+                          borderBottom: `1px solid ${T.border}`,
+                          height: 44,
+                        }}
+                      >
+                        {([
+                          { key:'rank' as keyof CbbTeam,   label:'RK',      w:84,  align:'center' },
+                          { key:'name' as keyof CbbTeam,   label:'TEAM',    w:480, align:'left' },
+                          { key:'conf' as keyof CbbTeam,   label:'CONF',    w:110, align:'center' },
+                          { key:'seed' as keyof CbbTeam,   label:'SEED',    w:90,  align:'center' },
+                          { key:'record' as keyof CbbTeam, label:'REC',     w:90,  align:'right' },
+                          { key:'cmbki' as keyof CbbTeam,  label:'CMBKi+',  w:110, align:'right' },
+                          ...(!isMobile ? [
+                            { key:'offEff' as keyof CbbTeam,   label:'OFF EFF', w:110, align:'right' },
+                            { key:'defEff' as keyof CbbTeam,   label:'DEF EFF', w:110, align:'right' },
+                            { key:'netEff' as keyof CbbTeam,   label:'NET',     w:100, align:'right' },
+                            { key:'sos' as keyof CbbTeam,      label:'SOS',     w:90,  align:'right' },
+                            { key:'tempo' as keyof CbbTeam,    label:'TEMPO',   w:95,  align:'right' },
+                            { key:'q1Record' as keyof CbbTeam, label:'Q1 REC',  w:95,  align:'right' },
+                          ] : []),
+                        ]).map(col => (
+                          <th
+                            key={String(col.key)}
+                            onClick={() => handleRkSort(col.key)}
+                            style={{
+                              padding: '0 10px',
+                              textAlign: col.align as any,
+                              cursor: 'pointer',
+                              userSelect: 'none',
+                              width: col.w * 0.7,
+                              fontFamily: "'DM Mono',monospace",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: T.textMuted,
+                              textTransform: 'uppercase',
+                              letterSpacing: '1.2px',
+                              whiteSpace: 'nowrap',
+                              position: 'relative',
+                              borderBottom: rkSort === col.key ? `2px solid ${T.accent}` : '2px solid transparent',
+                            }}
+                          >
+                            {col.label}
+                            {rkSort === col.key && (
+                              <span style={{ marginLeft: 6, fontSize: 9 }}>
+                                {rkSortDir === -1 ? '▼' : '▲'}
+                              </span>
+                            )}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {rkFiltered.map((t, i) => {
+                        // Use enriched team for logo/color
+                        const enriched = enrichedCbbTeams.find(et => et.name === t.name);
+                        const diff = t.prev - t.rank;
+                        const initials = t.name
+                          .split(' ')
+                          .map((w: string) => w[0])
+                          .join('')
+                          .substring(0, 3)
+                          .toUpperCase();
+
+                        return (
+                          <tr
+                            key={`${t.rank}-${t.name}`}
+                            style={{
+                              borderBottom: `1px solid ${T.border2}`,
+                              borderLeft: i < 4 ? `3px solid ${T.accent}` : '3px solid transparent',
+                              height: 48,
+                            }}
+                          >
+                            {/* Rank */}
+                            <td style={{ padding: '0 18px', textAlign: 'center', verticalAlign: 'middle' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: 14, color: T.text }}>
+                                  {t.rank}
+                                </span>
+                                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: diff > 0 ? T.green : diff < 0 ? T.red : T.textMuted }}>
+                                  {diff > 0 ? `▲${diff}` : diff < 0 ? `▼${Math.abs(diff)}` : '—'}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Team */}
+                            <td style={{ padding: '0 18px', verticalAlign: 'middle' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div
+                                  style={{
+                                    width: 28, height: 28, borderRadius: '50%',
+                                    background: '#f3f3f3', // light grey
+                                    border: `1px solid ${enriched?.alternateColor || '#e0e0e0'}`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: 9,
+                                    color: T.accent, flexShrink: 0,
+                                    overflow: 'hidden',
+                                  }}
+                                >
+                                  {enriched?.logo ? (
+                                    <img src={enriched.logo} alt={t.name} style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                                  ) : (
+                                    initials
+                                  )}
+                                </div>
+                                <div>
+                                  <div style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: '0.7px', textTransform: 'uppercase', color: enriched?.primaryColor || T.text, lineHeight: 1.02 }}>
+                                    {t.name}
+                                  </div>
+                                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: enriched?.alternateColor || T.textMuted, marginTop: 2, letterSpacing: '0.5px' }}>
+                                    {t.mascot}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Conf */}
+                            <td style={{ padding: '0 18px', textAlign: 'center', verticalAlign: 'middle' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 36, height: 20, padding: '0 6px', borderRadius: 6, background: T.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', color: T.textMuted, border: `1px solid ${T.border}`, fontFamily: "'DM Mono',monospace", fontSize: 9, fontWeight: 700 }}>
+                                {t.conf}
+                              </span>
+                            </td>
+
+                            {/* Seed */}
+                            <td style={{ padding: '0 18px', textAlign: 'center', verticalAlign: 'middle' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 22, height: 22, padding: '0 6px', borderRadius: 6, background: T.accentSub, color: T.accent, border: `1px solid ${T.accentBorder}`, fontFamily: "'DM Mono',monospace", fontSize: 10, fontWeight: 800 }}>
+                                {t.seed}
+                              </span>
+                            </td>
+
+                            {/* Record */}
+                            <td style={{ padding: '0 18px', textAlign: 'right', fontFamily: "'DM Mono',monospace", fontSize: 14, color: T.textSub, verticalAlign: 'middle' }}>
+                              <span style={{ fontSize: 10 }}>{t.record}</span>
+                            </td>
+
+                            {/* CMBKi+ */}
+                            <td style={{ padding: '0 18px', textAlign: 'right', fontFamily: "'DM Mono',monospace", fontSize: 16, fontWeight: 700, color: T.accent, verticalAlign: 'middle' }}>
+                              <span style={{ fontSize: 12, fontWeight: 700 }}>{t.cmbki >= 0 ? `+${t.cmbki.toFixed(1)}` : t.cmbki.toFixed(1)}</span>
+                            </td>
+
+                            {!isMobile && (
+                              <>
+                                <td style={{ padding: '0 10px', textAlign: 'right', fontFamily: "'DM Mono',monospace", fontSize: 10, color: T.blue, verticalAlign: 'middle' }}>
+                                  {t.offEff.toFixed(1)}
+                                </td>
+                                <td style={{ padding: '0 10px', textAlign: 'right', fontFamily: "'DM Mono',monospace", fontSize: 10, color: T.green, verticalAlign: 'middle' }}>
+                                  {t.defEff.toFixed(1)}
+                                </td>
+                                <td style={{ padding: '0 10px', textAlign: 'right', fontFamily: "'DM Mono',monospace", fontSize: 10, fontWeight: 600, color: t.netEff >= 20 ? T.accent : T.textSub, verticalAlign: 'middle' }}>
+                                  {t.netEff >= 0 ? `+${t.netEff.toFixed(1)}` : t.netEff.toFixed(1)}
+                                </td>
+                                <td style={{ padding: '0 10px', textAlign: 'right', fontFamily: "'DM Mono',monospace", fontSize: 10, color: T.textSub, verticalAlign: 'middle' }}>
+                                  {t.sos.toFixed(1)}
+                                </td>
+                                <td style={{ padding: '0 10px', textAlign: 'right', fontFamily: "'DM Mono',monospace", fontSize: 10, color: T.textMuted, verticalAlign: 'middle' }}>
+                                  {t.tempo.toFixed(1)}
+                                </td>
+                                <td style={{ padding: '0 10px', textAlign: 'right', fontFamily: "'DM Mono',monospace", fontSize: 10, color: T.textSub, verticalAlign: 'middle' }}>
+                                  {t.q1Record}
+                                </td>
+                              </>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: CHALK BRACKET */}
+        {section==='chalk' && (
+          <div>
+            <div className="anim-fade-up anim-in">
+              <SectionHeader num="05" title="CMBKi+ Chalk Bracket" subtitle="Pre-Tournament · Locked" T={T} />
+              <p style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:T.textMuted, lineHeight:1.8, maxWidth:640, marginBottom:28, marginTop:-16 }}>
+                This bracket was locked before tip-off and does not update. Compare against the Live Bracket to see how the tournament unfolded versus the model's pre-tournament predictions.
+              </p>
+              <ChalkVsRealityBar T={T} />
+            </div>
+            {REGIONS.map((r,i) => (
+              <div key={r} className="anim-fade-up" ref={aref(i)} style={{ animationDelay:`${i*0.07}s` }}>
+                <RegionBlock region={r} isMobile={isMobile} T={T} mode="chalk-overlay" />
+              </div>
+            ))}
+            <div className="anim-fade-up" ref={aref(REGIONS.length)}>
+              <FinalFourSection isMobile={isMobile} T={T} mode="chalk-overlay" />
+            </div>
+          </div>
+        )}
+
       </div>
+
+      {/* FOOTER */}
+      <div className="anim-fade-up" ref={aref(10)} style={{ borderTop:`1px solid ${T.border}`, padding:isMobile?'24px 20px':'28px 40px' }}>
+        <div style={{ maxWidth:1280, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
+          <div style={{ fontFamily:"'Rajdhani',sans-serif", fontWeight:700, fontSize:17, color:T.textMuted, letterSpacing:'1.5px', textTransform:'uppercase' }}>CFBPredictor<span style={{ color:T.gold }}>.com</span></div>
+          <p style={{ fontSize:11, color:T.textMuted, maxWidth:580, lineHeight:1.6 }}>CMBKi+ predictions are model-generated projections. Not intended as betting advice.</p>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+        button:hover { opacity:.85; }
+        .anim-fade-up { opacity:0; transform:translateY(22px); transition:opacity 0.55s ease, transform 0.55s ease; }
+        .anim-fade-up.anim-in { opacity:1; transform:translateY(0); }
+      `}</style>
+    </div>
   );
 }

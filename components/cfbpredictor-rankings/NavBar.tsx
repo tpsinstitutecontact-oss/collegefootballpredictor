@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useTheme } from './ThemeProvider';
 
 type ActivePage = 'rankings' | 'march-madness' | 'methodology' | 'contact';
@@ -16,25 +17,25 @@ export default function NavBar({ active }: { active: ActivePage }) {
 
   return (
     <nav className="nav-dark">
-      <a href="/" className="nav-logo">
+      <Link href="/" className="nav-logo">
         <div className="nav-logo-icon">CFB</div>
         <span className="nav-logo-text">CFBPredictor<span>.com</span></span>
-      </a>
+      </Link>
 
       <ul className="nav-links">
         <li className="nav-item">
-          <a href="/" className={cls('rankings')}>CFB Power Rankings</a>
+          <Link href="/" className={cls('rankings')}>CFB Power Rankings</Link>
         </li>
         <li className="nav-item">
-          <a href="/march-madness" className={cls('march-madness')}>
-            March Madness <span className="nav-badge nav-badge-orange">NEW</span>
-          </a>
+          <Link href="/march-madness" className={cls('march-madness')}>
+            March Madness <span className="nav-badge nav-badge-orange">SOON</span>
+          </Link>
         </li>
         <li className="nav-item">
-          <a href="/methodology" className={cls('methodology')}>Methodology</a>
+          <Link href="/methodology" className={cls('methodology')}>Methodology</Link>
         </li>
         <li className="nav-item">
-          <a href="/contact" className={cls('contact')}>Contact</a>
+          <Link href="/contact" className={cls('contact')}>Contact</Link>
         </li>
       </ul>
 

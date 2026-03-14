@@ -33,13 +33,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Runs before paint on full page loads */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             try {
               var t = localStorage.getItem('cfbp-theme') === 'light' ? 'light' : 'dark';
               document.documentElement.setAttribute('data-theme', t);
-              document.documentElement.style.backgroundColor = t === 'light' ? '#F0F3F8' : '#0B0E14';
+              document.documentElement.style.backgroundColor = t === 'light' ? '#E8ECF4' : '#0B0E14';
             } catch(e) {}
           })();
         `}} />
